@@ -419,13 +419,14 @@ B[2] = {
     ]
   },
   understand: [
-    ["Por que uma pasta domain/", "O barema (B2) exige que cada um dos 6 cálculos (valor de mercado, overall, taxa, multa, comissão, placar) esteja em <b>um único lugar</b>. Funções puras são fáceis de testar e difíceis de duplicar sem perceber."],
-    ["Idioma do código", "Identificadores em <b>inglês</b>: o barema penaliza nomes em mais de um idioma. Exceções: tabelas e colunas do banco (português, pelo enunciado) e campos da API em snake_case."],
+    ["Por que uma pasta domain/", "O barema (B2) exige que cada um dos 6 cálculos (valor de mercado, overall, taxa, multa, comissão, placar) esteja em <b>um único lugar</b>. Funções puras são fáceis de testar e difíceis de duplicar sem perceber. Elenco e patrimônio (RN11), <code>summary</code> (RN17) e classificação (RN21) também ficam lá: o B2 conta como falha de “camadas” o controller que calcula essas regras."],
+    ["Por que uma pasta features/", "As páginas só montam a tela; formulários e resultados de cada assunto ficam em <code>features/</code>, e o genérico (tabela, campo, mensagens) em <code>components/ui/</code>. Nada se repete entre telas (F2, “Componentes”)."],
+    ["Idioma do código","Identificadores em <b>inglês</b>: o barema penaliza nomes em mais de um idioma. Exceções: tabelas e colunas do banco (português, pelo enunciado) e campos da API em snake_case."],
     ["Textos", "Telas e mensagens de erro em português. Commits em português, no padrão <code>feat(players): cadastro com cálculo do valor base</code>."],
     ["Alternativa", "Express + Zod também serve, mas você montaria à mão as camadas, o tratamento de erros e o Swagger. Escolha uma e não troque no meio."]
   ],
   code: { lang: "estrutura", text:
-"mercado-de-jogadores/\n├── backend/\n│   ├── prisma/  schema.prisma · migrations/\n│   ├── src/\n│   │   ├── main.ts            prefixo /api/v1, CORS, pipes, filtro de erros\n│   │   ├── common/            filtros, validadores, datas, texto\n│   │   ├── domain/            FUNÇÕES PURAS: um lugar para cada cálculo\n│   │   │   ├── money.ts · overall.ts · base-value.ts · market-value.ts\n│   │   │   ├── purchase.ts · sale.ts · ordering.ts · match-engine.ts\n│   │   ├── prisma/            PrismaService\n│   │   ├── players/ · clubs/ · market/ · league/\n│   ├── test/\n│   └── .env.example\n├── frontend/\n│   └── src/\n│       ├── api/               ÚNICO lugar com fetch\n│       ├── hooks/             TanStack Query\n│       ├── components/        DataTable, FormField, Feedback, ConfirmDialog\n│       ├── pages/ · utils/ · types/\n├── docker-compose.yml\n├── .gitignore · .gitattributes\n└── README.md" },
+"mercado-de-jogadores/\n├── backend/\n│   ├── prisma/  schema.prisma · migrations/\n│   ├── src/\n│   │   ├── main.ts            prefixo /api/v1, CORS, pipes, filtro de erros, Swagger\n│   │   ├── common/            infraestrutura, sem regra de negócio\n│   │   │   ├── filters/ · pipes/ · validation/ · query/\n│   │   │   ├── text/ · dates/ · clock/ · logging/\n│   │   ├── domain/            FUNÇÕES PURAS: um lugar para cada cálculo\n│   │   │   ├── money.ts · overall.ts · base-value.ts · market-value.ts\n│   │   │   ├── purchase.ts · sale.ts · club-values.ts · transaction-summary.ts\n│   │   │   ├── ordering.ts · formation.ts · match-engine.ts · standings.ts\n│   │   ├── prisma/            PrismaService\n│   │   ├── players/ · clubs/ · market/ · league/   controller · service · dto/ · mapper\n│   ├── test/                  testes e2e\n│   └── .env.example · Dockerfile\n├── frontend/\n│   └── src/\n│       ├── api/               ÚNICO lugar com fetch\n│       ├── hooks/             TanStack Query\n│       ├── components/ui/     DataTable, FormField, SubmitButton, ConfirmDialog, Toast…\n│       ├── components/layout/ AppLayout + menu\n│       ├── features/          players/ · clubs/ · league/ (formulários e resultados)\n│       ├── pages/ · utils/ · types/\n├── docker-compose.yml · .nvmrc\n├── .gitignore · .gitattributes\n└── README.md" },
   check: [
     "Sei dizer por que escolhi cada tecnologia.",
     "Todas estão na lista permitida (Node 20/22, React 18+, Vite, PostgreSQL 14+).",
@@ -479,7 +480,7 @@ B[4] = {
     ["Tipos", "Dinheiro em <code>DECIMAL</code> com a precisão do enunciado (<code>@db.Decimal(6, 2)</code>). Datas em <code>TIMESTAMPTZ</code>."]
   ],
   callouts: [
-    ["danger", "<b>As 3 armadilhas do B3.</b> (1) Nome do clube único sem diferenciar maiúsculas, mas diferenciando acentos: use uma coluna <code>nome_normalizado</code> UNIQUE (o enunciado permite). (2) <code>escalacoes</code> com chave primária composta (<code>clube_id</code>, <code>jogador_id</code>) <b>e</b> UNIQUE em <code>jogador_id</code>. (3) Nenhuma coluna de valor calculado."],
+    ["danger", "<b>As 3 armadilhas do B3.</b> (1) Nome do clube único sem diferenciar maiúsculas, mas diferenciando acentos: índice UNIQUE em <code>lower(nome)</code>, escrito em SQL na migration (o enunciado permite). (2) <code>escalacoes</code> com chave primária composta (<code>clube_id</code>, <code>jogador_id</code>) <b>e</b> UNIQUE em <code>jogador_id</code>. (3) Nenhuma coluna de valor calculado."],
     ["warn", "O <code>prisma migrate reset</code> roda o <i>seed</i> sozinho se existir. O banco precisa começar vazio: use <code>--skip-seed</code>."]
   ],
   steps: [
@@ -490,7 +491,7 @@ B[4] = {
     { html: "Suba e migre:", code: "docker compose up -d db\ncd backend\ncp .env.example .env\nnpm install\nnpx prisma migrate dev --name init" },
     { html: "Teste a recriação e olhe as tabelas:", code: "npx prisma migrate reset --force --skip-seed\nnpx prisma studio" }
   ],
-  prompt: "[CONTEXTO do modelo de prompt]\nTAREFA: criar o schema Prisma e a primeira migration.\nREGRAS: [cole \"3. Estrutura de tabelas\" e a RN10]\nRequisitos:\n- Modelos em inglês (Player, Club, Contract, Transaction, Lineup, Match, MatchDuel) mapeados com @@map/@map\n  para os nomes EXATOS do enunciado.\n- Dinheiro em Decimal com a precisão do enunciado. Datas em Timestamptz.\n- Unicidade do nome do clube conforme a RN10 via coluna nome_normalizado UNIQUE.\n- escalacoes com PK composta (clube_id, jogador_id) e UNIQUE em jogador_id.\n- Nenhuma coluna para valores calculados.\nMostre o schema antes de gerar a migration.",
+  prompt: "[CONTEXTO do modelo de prompt]\nTAREFA: criar o schema Prisma e a primeira migration.\nREGRAS: [cole \"3. Estrutura de tabelas\" e a RN10]\nRequisitos:\n- Modelos em inglês (Player, Club, Contract, Transaction, Lineup, Match, MatchDuel) mapeados com @@map/@map\n  para os nomes EXATOS do enunciado.\n- Dinheiro em Decimal com a precisão do enunciado. Datas em Timestamptz.\n- Unicidade do nome do clube conforme a RN10 via índice UNIQUE em lower(nome), escrito em SQL na migration.\n- escalacoes com PK composta (clube_id, jogador_id) e UNIQUE em jogador_id.\n- Nenhuma coluna para valores calculados.\nMostre o schema antes de gerar a migration.",
   check: [
     "As 7 tabelas existem com todos os nomes de colunas do enunciado.",
     "No psql: 'Águias FC' e depois 'águias fc' → erro; 'Aguias FC' → aceito.",
@@ -499,7 +500,7 @@ B[4] = {
   commits: ["chore(backend): cria projeto NestJS com Prisma", "feat(db): schema das 7 tabelas e migration inicial", "chore: docker compose com PostgreSQL 16"],
   interview: [
     ["Por que DECIMAL e não FLOAT para dinheiro?", "Float não representa exatamente valores como 0,1. Somas e arredondamentos erram no centavo. DECIMAL guarda o valor exato."],
-    ["Como “Águias FC” e “águias fc” não coexistem, mesmo inserindo direto no banco?", "A aplicação grava o nome normalizado (espaços ajustados, minúsculas, com acentos) numa coluna com UNIQUE. O banco recusa a duplicata."]
+    ["Como “Águias FC” e “águias fc” não coexistem, mesmo inserindo direto no banco?", "A API grava o nome já normalizado pela V4 (espaços ajustados), e o banco tem um índice UNIQUE em lower(nome): minúsculas, mas com os acentos. O próprio banco recusa a duplicata."]
   ]
 };
 
@@ -919,7 +920,7 @@ B[21] = {
       ["3", "Instalar e executar", "Um comando por linha, dizendo a pasta. Origem da API (sem /api/v1) e URL do frontend. Os lockfiles estão versionados."],
       ["4", "Variáveis de ambiente", "Tabela + <code>.env.example</code> em backend/ e frontend/"],
       ["5", "Estrutura e bibliotecas", "Pastas + motivo de cada biblioteca"],
-      ["6", "Decisões e premissas", "Valor de mercado em memória, nome_normalizado, relógio injetável, como a tela trata DOENTE → APTO…"],
+      ["6", "Decisões e premissas", "Valor de mercado em memória, índice único em lower(nome), relógio injetável, como a tela trata DOENTE → APTO…"],
       ["7", "Não implementadas", "Lista, ou “Nenhuma”"],
       ["8", "Uso de IA", "Ferramentas, onde, como e por quê, o que aceitou, alterou ou descartou"]
     ]
@@ -972,7 +973,7 @@ B[24] = {
     ["Por que Decimal?", "Porque 0.1 + 0.2 em float dá 0.30000000000000004, e o arredondamento sairia errado no centavo."],
     ["O que acontece se der erro no meio da compra?", "Tudo está numa transação do banco: o rollback desfaz caixa, jogador, contrato e histórico."],
     ["Como evitou dois clubes comprando o mesmo jogador ao mesmo tempo?", "Atualização condicional (WHERE clube_id IS NULL) dentro da transação, conferindo as linhas afetadas."],
-    ["Como funciona a unicidade do nome do clube?", "Coluna normalizada com UNIQUE no banco."],
+    ["Como funciona a unicidade do nome do clube?", "Nome normalizado pela V4 + índice UNIQUE em lower(nome) no banco."],
     ["Como a tela sabe que precisa atualizar depois da compra?", "A mutation do TanStack Query invalida as queries de jogadores e clubes."],
     ["Como evitou o clique duplo?", "O botão fica desabilitado enquanto o pedido está pendente."],
     ["Onde usou IA? Dê um exemplo de algo que ela errou.", "Use o seu diário de IA. Tenha 2 ou 3 exemplos concretos."],

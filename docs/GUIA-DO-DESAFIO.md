@@ -248,43 +248,66 @@ mercado-de-jogadores/            ← raiz do repositório
 │   │   ├── schema.prisma        ← modelo do banco (tabelas em português via @@map)
 │   │   └── migrations/          ← SQL versionado
 │   ├── src/
-│   │   ├── main.ts              ← bootstrap: prefixo /api/v1, CORS, pipes, filtro
+│   │   ├── main.ts              ← bootstrap: prefixo /api/v1, CORS, pipes, filtro, Swagger
 │   │   ├── app.module.ts
-│   │   ├── common/              ← filtro de exceções, validadores, formatação de datas e texto
+│   │   ├── common/              ← infraestrutura, sem regra de negócio
+│   │   │   ├── filters/         (toda recusa vira {message}, sem stack trace)
+│   │   │   ├── pipes/           (id da URL → 404; corpo que não é objeto → 400)
+│   │   │   ├── validation/      (decoradores reutilizáveis: inteiro estrito, nome V4, regras entre campos)
+│   │   │   ├── query/           (leitura estrita de query params)
+│   │   │   ├── text/            (normalizeName, removeAccents)
+│   │   │   ├── dates/           (parse estrito e formatação -03:00)
+│   │   │   ├── clock/           (ClockService: o "agora" trocável nos testes)
+│   │   │   └── logging/         (uma linha de log por requisição)
 │   │   ├── domain/              ← FUNÇÕES PURAS: cálculos (1 lugar só para cada regra)
 │   │   │   ├── money.ts
 │   │   │   ├── overall.ts
 │   │   │   ├── base-value.ts
 │   │   │   ├── market-value.ts
 │   │   │   ├── purchase.ts      (taxa e limite)
-│   │   │   ├── sale.ts          (dias restantes, multa, comissão)
+│   │   │   ├── sale.ts          (dias restantes, multa, lucro, comissão, crédito)
+│   │   │   ├── club-values.ts   (valor do elenco e patrimônio)
+│   │   │   ├── transaction-summary.ts (totais do summary)
 │   │   │   ├── ordering.ts      (ordem alfabética, ordem das posições)
-│   │   │   └── match-engine.ts  (duelos e placar)
+│   │   │   ├── formation.ts     (as 5 posições fecham a formação?)
+│   │   │   ├── match-engine.ts  (duelos e placar)
+│   │   │   └── standings.ts     (pontos, saldo e ordem da classificação)
 │   │   ├── prisma/              ← PrismaService
-│   │   ├── players/             ← controller, service, dto
-│   │   ├── clubs/
+│   │   ├── players/             ← controller, service, dto/, player.mapper.ts
+│   │   ├── clubs/               ← controller, service, dto/, club.mapper.ts
 │   │   ├── market/              ← compra, venda, histórico, CSV
 │   │   └── league/              ← escalação, partidas, classificação
-│   ├── test/
+│   ├── test/                    ← testes e2e (supertest)
 │   ├── .env.example
+│   ├── Dockerfile
 │   └── package.json (+ package-lock.json versionado!)
 ├── frontend/
 │   ├── src/
 │   │   ├── api/                 ← cliente HTTP + funções por recurso (ÚNICO lugar com fetch)
 │   │   ├── hooks/               ← hooks do TanStack Query (usePlayers, useBuyPlayer…)
-│   │   ├── components/          ← DataTable, FormField, Feedback, ConfirmDialog, Pagination…
+│   │   ├── components/
+│   │   │   ├── ui/              ← DataTable, Pagination, FormField, SubmitButton, ConfirmDialog, Modal, Tabs, Toast
+│   │   │   └── layout/          ← AppLayout + menu
+│   │   ├── features/            ← peças de cada assunto: formulários (com schema Zod) e resultados
+│   │   │   ├── players/         (PlayerForm, ConditionForm, PlayerFilters, BuyDialog, BuyResult)
+│   │   │   ├── clubs/           (ClubForm, SquadTab, SellResult, TransactionsTab, TransactionsSummary)
+│   │   │   └── league/          (LineupTab, MatchForm, DuelsTable, MatchesHistory)
 │   │   ├── pages/               ← PlayersPage, ClubsPage, ClubPage, MatchesPage, StandingsPage
 │   │   ├── utils/               ← formatMoney, formatDateTime, toApiDateTime
 │   │   └── types/
 │   ├── .env.example
+│   ├── Dockerfile
 │   └── package.json
 ├── docker-compose.yml
+├── .nvmrc
 ├── .gitignore
 ├── .gitattributes
 └── README.md
 ```
 
-**Por que separar `domain/`?** O barema (B2, "Regras de negócio") exige que cada um dos 6 cálculos (valor de mercado, overall, taxa, multa, comissão, placar) esteja **em um único lugar**. Funções puras (recebem dados, devolvem resultado, sem banco) são fáceis de testar e impossíveis de duplicar sem perceber.
+**Por que separar `domain/`?** O barema (B2, "Regras de negócio") exige que cada um dos 6 cálculos (valor de mercado, overall, taxa, multa, comissão, placar) esteja **em um único lugar**. Funções puras (recebem dados, devolvem resultado, sem banco) são fáceis de testar e impossíveis de duplicar sem perceber. Elenco e patrimônio (RN11), `summary` (RN17) e classificação (RN21) também ficam no `domain/`: o B2 conta como falha de "camadas" o controller que calcula essas regras.
+
+**Por que `features/` no frontend?** As páginas (`pages/`) só montam a tela; os formulários e os cartões de resultado de cada assunto ficam em `features/`, e o que é genérico (tabela, campo, mensagens) fica em `components/ui/`. Assim nada se repete entre telas (F2, "Componentes").
 
 ### 📖 Convenções (decida agora e passe para a IA)
 
@@ -383,8 +406,8 @@ As 7 tabelas criadas por **migration**, com os nomes exatos do enunciado, e coma
 ### 📖 As 3 armadilhas do banco (valem pontos no B3)
 
 1. **Nome do clube único, sem diferenciar maiúsculas, mas diferenciando acentos.** "Águias FC" e "águias fc" são iguais; "Águias FC" e "Aguias FC" são diferentes.
-   - Solução recomendada: uma coluna extra `nome_normalizado` (o nome depois da regra V4, em minúsculas) com `UNIQUE`. O enunciado permite isso explicitamente ("coluna ou índice normalizado para garantir a RN10 é permitido").
-   - Alternativa: índice único em `lower(nome)` criado por SQL na migration (o Prisma não gera esse índice sozinho; teria que editar a migration à mão).
+   - **Decidido:** índice único em `lower(nome)`, criado por SQL na migration (o Prisma não gera esse índice sozinho; a migration é editada à mão). Como a API já grava o nome normalizado pela V4, `lower()` basta, e a garantia é só do banco: uma inserção direta não precisa preencher nada a mais. O enunciado permite ("coluna ou índice normalizado para garantir a RN10 é permitido").
+   - Alternativa descartada: coluna extra `nome_normalizado` com `UNIQUE`, preenchida pela aplicação.
 2. **`escalacoes`**: chave primária **composta** (`clube_id`, `jogador_id`) **e** `jogador_id` com `UNIQUE`.
 3. **Nenhuma coluna de valor calculado**: nada de `valor_mercado`, `overall`, `patrimonio`, `pontos`…
 
@@ -420,7 +443,7 @@ Requisitos:
 - Modelos em inglês (Player, Club, Contract, Transaction, Lineup, Match, MatchDuel) mapeados com @@map/@map
   para os nomes EXATOS do enunciado.
 - Dinheiro em Decimal com a precisão do enunciado. Datas em Timestamptz.
-- Unicidade do nome do clube conforme a RN10 via coluna nome_normalizado UNIQUE.
+- Unicidade do nome do clube conforme a RN10 via índice UNIQUE em lower(nome), escrito em SQL na migration.
 - escalacoes com PK composta (clube_id, jogador_id) e UNIQUE em jogador_id.
 - Nenhuma coluna para valores calculados.
 Mostre o schema antes de gerar a migration.
@@ -1138,7 +1161,7 @@ O README da raiz precisa ter **cada item numa seção própria** (B4 e F4 confer
 3. **Instalar e executar**, um comando por linha, dizendo a pasta. Informe: **origem da API** (`http://localhost:3000`, sem `/api/v1`) e **URL do frontend** (`http://localhost:5173`). Diga que os `package-lock.json` estão versionados.
 4. **Variáveis de ambiente** (tabela), com o `.env.example` em `backend/` e em `frontend/`. Toda variável usada no código precisa estar listada.
 5. **Estrutura de pastas** + **bibliotecas e o motivo de cada uma**. Toda biblioteca listada precisa estar no `package.json`.
-6. **Decisões e premissas** — ex.: cálculo do valor de mercado em memória na listagem; coluna `nome_normalizado`; como a tela trata DOENTE → APTO; relógio injetável; formato de exibição das datas.
+6. **Decisões e premissas** — ex.: cálculo do valor de mercado em memória na listagem; índice único em `lower(nome)`; como a tela trata DOENTE → APTO; relógio injetável; formato de exibição das datas.
 7. **Funcionalidades não implementadas** (ou "Nenhuma").
 8. **Uso de inteligência artificial** — ferramentas, **onde** (arquivos ou funcionalidades), **como e por quê**, e **o que você aceitou, alterou ou descartou**. Use o seu diário (Anexo C). Seja honesta e específica:
    > "Usei o Claude Code para gerar o código do backend e do frontend, bloco a bloco. Eu escrevia o plano e as regras do enunciado no prompt, revisava o plano, rodava os testes e conferia os resultados com as tabelas do enunciado. Descartei a primeira versão do cálculo de comissão, que arredondava cada faixa separadamente (a regra manda arredondar uma vez só, no final). Alterei a listagem para calcular o valor de mercado em memória…"
@@ -1224,7 +1247,7 @@ São chamados os 10 primeiros aprovados. Como o uso de IA "pode ser questionado 
 3. Por que você usou Decimal? Mostre um caso em que `number` erraria.
 4. O que acontece no banco quando um clube compra um jogador? E se der erro no meio? (transação, rollback)
 5. Como você evitou que dois clubes comprem o mesmo jogador ao mesmo tempo?
-6. Como funciona a unicidade do nome do clube? (normalização + UNIQUE)
+6. Como funciona a unicidade do nome do clube? (nome normalizado pela V4 + índice UNIQUE em `lower(nome)`)
 7. Por que 400, 404 ou 409 neste caso?
 8. Como o frontend sabe que precisa atualizar a lista depois da compra? (invalidação de queries)
 9. Como você evitou o clique duplo?
