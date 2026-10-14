@@ -14,7 +14,7 @@ Errata publicada a partir de 16/10/2026 prevalece sobre o enunciado.
 - Registre cada bloco em `docs/DIARIO-IA.md` (o que foi pedido, aceito, alterado ou descartado): vira a seção
   "Uso de inteligência artificial" do README.
 - `docs/guia-desafio.html` e `docs/matriz-rastreabilidade.html` são páginas publicadas como artifacts. Ao alterar
-  uma delas, republique no mesmo link (passando a `url`) e faça commit:
+  uma delas, republique no mesmo link (passando a `url`):
   - guia: https://claude.ai/code/artifact/a9e23023-a2e4-479c-9252-446bf8a78f20
   - matriz: https://claude.ai/code/artifact/b5851511-70fe-404d-87d8-27b2f8a9b8eb
 - Mockup no Figma (referência de fluxo, não de pixel): https://www.figma.com/design/oevjrS0eaqL3VHSvKYB8GS/Passe?node-id=2-2
@@ -48,6 +48,8 @@ Errata publicada a partir de 16/10/2026 prevalece sobre o enunciado.
 
 ## Git
 
+- **A Thainá faz todos os commits e pushes.** Claude deixa as mudanças no working tree, lista os arquivos e sugere
+  a mensagem (uma por ideia). Nunca rodar `git commit` nem `git push`.
 - Commits em português, Conventional Commits, pequenos, uma ideia por commit, com escopo e descrição:
   `feat(players): cadastro com cálculo do valor base`. Mensagens só com palavras genéricas
   ("fix", "ajustes", "update", "wip", "final"…) contam contra no barema.
@@ -55,7 +57,16 @@ Errata publicada a partir de 16/10/2026 prevalece sobre o enunciado.
   com push em ≥ 3 dias diferentes. Histórico já enviado nunca é reescrito (nada de `push --force`).
 - `package-lock.json` e `.env.example` versionados; `.env` fora do Git.
 
+## Decisões já tomadas (Bloco 2)
+
+- Estrutura de pastas: a árvore de "Bloco 2" em `docs/GUIA-DO-DESAFIO.md`.
+- Commits gerados com IA levam a linha `Co-Authored-By` (a banca aceitou na issue #2, desde que o README declare o uso).
+- Unicidade do nome do clube (RN10): índice UNIQUE em `lower(nome)` criado na migration, sem coluna extra.
+  O nome já chega ao banco normalizado pela V4.
+- README: um só, na raiz. Caminho principal = banco no Docker + backend e frontend com npm; Docker Compose
+  completo como diferencial.
+- Sem dúvidas enviadas à banca: pontos não definidos viram "Decisões e premissas" no README.
+
 ## Prazos
 
-- Dúvidas ao avaliador: até 15/10/2026 23h59 (issue pública ou e-mail).
 - Entrega: até 23/10/2026 20h (meta interna: 17h). Repositório público às 12h de 26/10/2026.
