@@ -1,0 +1,1544 @@
+<title>Guia do Desafio Fullstack</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: estádio — barra lateral fixa com os 24 blocos (a "escalação"), área principal mostra um bloco por vez; placar no topo. */
+:root {
+  --paper: #F4F7F3;
+  --card: #FFFFFF;
+  --ink: #142019;
+  --muted: #56685D;
+  --line: #D6E0D8;
+  --pitch: #1D6A3A;
+  --pitch-soft: #E2EFE5;
+  --chalk: #FFFFFF;
+  --card-yellow: #F1C232;
+  --yellow-soft: #FFF4D1;
+  --yellow-ink: #6B5200;
+  --card-red: #C2362C;
+  --red-soft: #FBE5E2;
+  --code-bg: #EEF3EF;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #0E1611;
+    --card: #152019;
+    --ink: #E4ECE6;
+    --muted: #93A79A;
+    --line: #26372C;
+    --pitch: #55C27D;
+    --pitch-soft: #1B3324;
+    --chalk: #0E1611;
+    --card-yellow: #F2C53D;
+    --yellow-soft: #33290C;
+    --yellow-ink: #F6D77A;
+    --card-red: #F06A5F;
+    --red-soft: #3A1916;
+    --code-bg: #0B120E;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0E1611;
+  --card: #152019;
+  --ink: #E4ECE6;
+  --muted: #93A79A;
+  --line: #26372C;
+  --pitch: #55C27D;
+  --pitch-soft: #1B3324;
+  --chalk: #0E1611;
+  --card-yellow: #F2C53D;
+  --yellow-soft: #33290C;
+  --yellow-ink: #F6D77A;
+  --card-red: #F06A5F;
+  --red-soft: #3A1916;
+  --code-bg: #0B120E;
+}
+
+* { box-sizing: border-box; }
+html, body { background: var(--paper); }
+body {
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.6;
+}
+h1, h2, h3 { font-family: var(--display); line-height: 1.05; text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 800; text-transform: uppercase; }
+h2 { font-size: 2rem; font-weight: 700; text-transform: uppercase; }
+h3 { font-size: 1.35rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+p { margin: 0; }
+code { font-family: var(--mono); font-size: .86em; background: var(--code-bg); padding: .1em .35em; border-radius: 4px; overflow-wrap: anywhere; }
+a { color: var(--pitch); }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--card-yellow); outline-offset: 2px; }
+.eyebrow { font-family: var(--display); font-weight: 700; font-size: .95rem; letter-spacing: .14em; text-transform: uppercase; color: var(--pitch); }
+.muted { color: var(--muted); }
+
+/* ---------- Topo / placar ---------- */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--pitch);
+  color: #fff;
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.top-inner { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; max-width: 1400px; margin: 0 auto; }
+.brand { font-family: var(--display); font-weight: 800; font-size: 1.35rem; text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: 10px; }
+.brand svg { flex: none; }
+.menu-btn { display: none; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.35); color: #fff; border-radius: 8px; padding: 6px 12px; font-family: var(--display); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.top-progress { flex: 1 1 200px; min-width: 160px; display: flex; flex-direction: column; gap: 4px; }
+.top-progress small { font-family: var(--display); letter-spacing: .1em; text-transform: uppercase; font-size: .8rem; opacity: .9; }
+.bar { height: 8px; background: rgba(255,255,255,.22); border-radius: 99px; overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: #F2C53D; border-radius: 99px; transition: width .4s ease; }
+.scoreboard { display: flex; align-items: stretch; gap: 6px; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.scoreboard .cell { background: #0B1A10; color: #F2C53D; border-radius: 6px; padding: 2px 10px; text-align: center; min-width: 54px; }
+.scoreboard .cell b { display: block; font-size: 1.35rem; line-height: 1.2; }
+.scoreboard .cell span { display: block; font-family: var(--display); font-size: .68rem; letter-spacing: .12em; color: #CFE3D5; text-transform: uppercase; }
+.scoreboard .label { font-family: var(--display); text-transform: uppercase; font-size: .75rem; letter-spacing: .1em; line-height: 1.15; align-self: center; max-width: 80px; }
+
+/* ---------- Layout principal ---------- */
+.shell {
+  display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 32px;
+  max-width: 1400px; margin: 0 auto;
+  padding-block: 24px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+nav.side {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px);
+  align-self: start; max-height: calc(100vh - 110px); overflow-y: auto;
+  padding-right: 6px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+.nav-group { display: flex; flex-direction: column; gap: 2px; }
+.nav-group h4 { margin: 0 0 4px; font-family: var(--display); font-size: .82rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; display: flex; justify-content: space-between; }
+.nav-item {
+  display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 8px;
+  text-align: left; background: none; border: 0; padding: 6px 8px; border-radius: 8px;
+  font-size: .95rem; line-height: 1.25; color: var(--ink);
+}
+.nav-item:hover { background: var(--pitch-soft); }
+.nav-item[aria-current="page"] { background: var(--pitch); color: #fff; }
+.nav-item[aria-current="page"] .num { background: #fff; color: var(--pitch); border-color: #fff; }
+.num {
+  font-family: var(--display); font-weight: 800; font-size: 1rem; width: 30px; height: 30px;
+  display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--pitch); color: var(--pitch);
+  font-variant-numeric: tabular-nums;
+}
+.nav-item.done .num { background: var(--pitch); color: #fff; }
+.nav-item .tick { font-size: .8rem; color: var(--pitch); font-weight: 700; }
+.nav-item[aria-current="page"] .tick { color: #fff; }
+
+main { min-width: 0; display: flex; flex-direction: column; gap: 28px; }
+.view { display: flex; flex-direction: column; gap: 28px; }
+
+/* ---------- Componentes ---------- */
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.prose { max-width: 70ch; }
+.prose ul, .prose ol, ul.clean, ol.clean { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; }
+
+.hero { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.hero p.lead { font-size: 1.15rem; max-width: 60ch; margin-top: 12px; }
+.split { display: grid; grid-template-columns: 1fr 1fr; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); }
+.split > div { padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+.split .you { background: var(--pitch-soft); }
+.split .ai { background: var(--card); }
+.split h3 { font-size: 1.1rem; }
+
+.callout { border-radius: var(--radius); padding: 14px 16px; display: grid; grid-template-columns: 20px 1fr; gap: 12px; align-items: start; }
+.callout::before { content: ""; width: 14px; height: 20px; border-radius: 2px; margin-top: 4px; }
+.callout.warn { background: var(--yellow-soft); color: var(--ink); }
+.callout.warn::before { background: var(--card-yellow); }
+.callout.danger { background: var(--red-soft); }
+.callout.danger::before { background: var(--card-red); }
+.callout.tip { background: var(--pitch-soft); }
+.callout.tip::before { background: var(--pitch); border-radius: 50%; width: 14px; height: 14px; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--display); text-transform: uppercase; letter-spacing: .08em; font-size: .85rem; color: var(--muted); font-weight: 700; background: var(--paper); }
+tr:last-child td { border-bottom: 0; }
+td.n { font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: .88rem; white-space: nowrap; }
+tr.today td { background: var(--yellow-soft); }
+tr.today td:first-child { box-shadow: inset 4px 0 0 var(--card-yellow); }
+
+/* Barras de pontuação */
+.points { display: flex; flex-direction: column; gap: 8px; }
+.pt-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) 40px; align-items: center; gap: 10px; font-size: .92rem; }
+.pt-row b { font-family: var(--display); font-size: 1rem; letter-spacing: .04em; }
+.pt-track { position: relative; height: 22px; background: var(--paper); border-radius: 4px; overflow: hidden; }
+.pt-track i { position: absolute; inset: 0 auto 0 0; background: var(--pitch); border-radius: 4px; }
+.pt-track.front i { background: var(--card-yellow); }
+.pt-track span { position: relative; z-index: 1; padding-left: 8px; font-size: .82rem; line-height: 22px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.pt-track i + span { color: #fff; }
+.pt-track.front i + span { color: #2B2200; }
+.pt-row .val { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.legend .b::before { background: var(--pitch); }
+.legend .f::before { background: var(--card-yellow); }
+
+/* Fluxo */
+.flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.flow .chip { background: var(--pitch-soft); color: var(--ink); padding: 6px 12px; border-radius: 99px; font-weight: 600; font-size: .92rem; }
+.flow .arrow { color: var(--muted); font-family: var(--mono); }
+
+/* Método */
+.steps { counter-reset: s; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.steps li { list-style: none; counter-increment: s; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 6px; font-size: .93rem; }
+.steps li::before { content: counter(s); font-family: var(--display); font-weight: 800; font-size: 1.8rem; color: var(--pitch); line-height: 1; }
+.steps li b { font-size: 1rem; }
+.steps { padding: 0; margin: 0; }
+
+/* Código */
+.code { position: relative; }
+.code pre {
+  margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px; padding-top: 40px; overflow-x: auto; font-family: var(--mono); font-size: .84rem; line-height: 1.55; white-space: pre;
+}
+.code .copy {
+  position: absolute; top: 8px; right: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+  padding: 3px 10px; font-family: var(--display); font-size: .82rem; text-transform: uppercase; letter-spacing: .1em; color: var(--pitch); font-weight: 700;
+}
+.code .lang { position: absolute; top: 10px; left: 14px; font-family: var(--display); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+/* Bloco */
+.block-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: center; }
+.jersey {
+  width: 92px; height: 92px; border-radius: 18px; background: var(--pitch); color: #fff;
+  display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 3.4rem; line-height: 1;
+  font-variant-numeric: tabular-nums; position: relative;
+}
+.jersey small { position: absolute; top: 8px; font-size: .62rem; letter-spacing: .2em; font-weight: 700; opacity: .85; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.tag { font-size: .85rem; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--line); background: var(--card); color: var(--muted); }
+.tag strong { color: var(--ink); }
+.goal { font-size: 1.15rem; border-left: 4px solid var(--card-yellow); padding: 4px 0 4px 16px; max-width: 72ch; }
+
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 2px solid var(--line); }
+.tab {
+  background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -2px;
+  padding: 8px 14px; font-family: var(--display); font-weight: 700; font-size: 1.02rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--pitch); border-bottom-color: var(--pitch); }
+.tab .count { font-family: var(--mono); font-size: .75rem; margin-left: 4px; opacity: .8; }
+.tabpanel { display: flex; flex-direction: column; gap: 16px; }
+
+.concepts { display: flex; flex-direction: column; gap: 12px; }
+.concept { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
+.concept:last-child { border-bottom: 0; padding-bottom: 0; }
+.concept dt { font-weight: 700; }
+.concept dd { margin: 0; }
+
+ol.todo { margin: 0; padding: 0; list-style: none; counter-reset: t; display: flex; flex-direction: column; gap: 12px; }
+ol.todo > li { counter-increment: t; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; }
+ol.todo > li::before { content: counter(t); font-family: var(--display); font-weight: 800; color: #fff; background: var(--ink); width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; font-size: .95rem; margin-top: 2px; }
+ol.todo > li > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.checks label { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.checks label:hover { background: var(--pitch-soft); }
+.checks input { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--pitch); }
+.checks input:checked + span { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--pitch); }
+
+.commit { display: flex; align-items: center; gap: 10px; justify-content: space-between; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+.commit code { background: none; padding: 0; font-size: .86rem; }
+.mini-copy { flex: none; background: none; border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; font-size: .78rem; color: var(--pitch); font-family: var(--display); letter-spacing: .1em; text-transform: uppercase; font-weight: 700; }
+
+.qa { display: flex; flex-direction: column; gap: 10px; }
+.qa details { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; }
+.qa summary { font-weight: 700; cursor: pointer; }
+.qa details p { margin-top: 8px; color: var(--muted); }
+
+.block-foot { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; border-top: 2px solid var(--line); padding-top: 18px; }
+.btn { border: 2px solid var(--pitch); background: var(--card); color: var(--pitch); border-radius: 8px; padding: 8px 16px; font-family: var(--display); font-weight: 700; font-size: 1.02rem; letter-spacing: .08em; text-transform: uppercase; }
+.btn.primary { background: var(--pitch); color: #fff; }
+.btn.primary.is-done { background: var(--card); color: var(--pitch); }
+.btn:disabled { opacity: .4; cursor: default; }
+
+.phase-banner { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.phase-banner .eyebrow { color: var(--muted); }
+
+.toast { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--paper); padding: 8px 18px; border-radius: 99px; font-weight: 600; opacity: 0; pointer-events: none; transition: .25s; z-index: 50; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.checklist-group { display: flex; flex-direction: column; gap: 6px; }
+.checklist-group h3 { font-size: 1.15rem; }
+
+@media (max-width: 1100px) {
+  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .shell { grid-template-columns: 1fr; }
+  .menu-btn { display: inline-block; }
+  nav.side { position: static; max-height: none; display: none; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
+  nav.side.open { display: flex; }
+  .grid-2, .grid-3, .split { grid-template-columns: 1fr; }
+  .concept { grid-template-columns: 1fr; gap: 4px; }
+  .scoreboard .label { display: none; }
+}
+@media (max-width: 520px) {
+  body { font-size: 16px; }
+  .steps { grid-template-columns: 1fr; }
+  .block-head { grid-template-columns: 1fr; }
+  .jersey { width: 70px; height: 70px; font-size: 2.6rem; border-radius: 14px; }
+  .panel { padding: 16px; }
+  .scoreboard .cell { min-width: 44px; padding: 2px 6px; }
+  .brand span.full { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="1.5" y="4.5" width="25" height="19" rx="2" fill="none" stroke="#fff" stroke-width="2"/><line x1="14" y1="4.5" x2="14" y2="23.5" stroke="#fff" stroke-width="2"/><circle cx="14" cy="14" r="3.6" fill="none" stroke="#fff" stroke-width="2"/></svg>
+      <span>Guia <span class="full">do Desafio</span></span>
+    </div>
+    <button class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="side">Blocos</button>
+    <div class="top-progress">
+      <small id="progress-label">0 de 24 blocos concluídos</small>
+      <div class="bar"><i id="progress-bar"></i></div>
+    </div>
+    <div class="scoreboard" aria-label="Tempo até a entrega">
+      <div class="label">Até a entrega<br>23/10 · 20h</div>
+      <div class="cell"><b id="cd-d">--</b><span>dias</span></div>
+      <div class="cell"><b id="cd-h">--</b><span>horas</span></div>
+      <div class="cell"><b id="cd-m">--</b><span>min</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="side" id="side" aria-label="Blocos do projeto"></nav>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+"use strict";
+
+/* =================== DADOS =================== */
+
+var PHASES = [
+  { id: "prep", name: "Aquecimento", sub: "Preparação", blocks: [1, 2, 3] },
+  { id: "back", name: "1º tempo", sub: "Backend", blocks: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
+  { id: "front", name: "2º tempo", sub: "Frontend", blocks: [14, 15, 16, 17, 18, 19] },
+  { id: "end", name: "Apito final", sub: "Entrega", blocks: [20, 21, 22, 23, 24] }
+];
+
+var PROMPT_BASE = [
+  "CONTEXTO",
+  "Estou fazendo o desafio do SENAI (API REST + frontend React) de mercado de jogadores.",
+  "Stack: NestJS + TypeScript + Prisma + PostgreSQL (backend); React + Vite + TypeScript (frontend).",
+  "Arquitetura: controller (só HTTP) -> service (orquestra e valida regras) -> Prisma (dados).",
+  "Os cálculos ficam em funções puras em src/domain, cada um em UM único lugar.",
+  "Identificadores em inglês, camelCase/PascalCase. Sem código comentado, sem código sem uso.",
+  "",
+  "TAREFA",
+  "Implementar [BLOCO X: descrição].",
+  "",
+  "REGRAS DO ENUNCIADO (copiadas literalmente)",
+  "[cole aqui os trechos do enunciado: regras, limites, exemplos de request/response]",
+  "",
+  "O QUE EU QUERO",
+  "1. Primeiro, o plano: arquivos a criar ou alterar e responsabilidade de cada um. Não escreva código ainda.",
+  "2. Liste qualquer ponto do enunciado que esteja ambíguo para você.",
+  "3. Depois que eu aprovar: implemente e escreva testes usando as tabelas de exemplo como casos."
+].join("\n");
+
+var B = {};
+
+B[1] = {
+  title: "Entender o problema", day: "qua 14/10", points: "Base de tudo",
+  goal: "Ao final, você explica o sistema inteiro sem olhar o enunciado e tem uma lista de dúvidas para enviar até 15/10, às 23h59.",
+  understand: [
+    ["O sistema", "Um mercado de jogadores de uma liga fictícia, em 4 módulos: <b>Jogadores</b> (preço muda com condição, agilidade e idade), <b>Clubes</b> (começam com 300,00 de caixa), <b>Mercado</b> (compra com taxa, venda com multa e comissão, histórico) e <b>Liga</b> (5 titulares, partidas por duelos, classificação)."],
+    ["Calculado × gravado", "Valor de mercado, overall, patrimônio e classificação <b>nunca</b> viram coluna: são calculados a cada consulta. Valor base, valor da transação e valor de compra do contrato <b>são</b> gravados."],
+    ["Foto do momento", "A transação e o duelo guardam o nome e os valores daquele instante. Se o jogador muda de nome depois, o histórico não muda."],
+    ["Exclusão lógica", "Excluir é preencher <code>excluido_em</code>. A linha fica no banco, mas a API responde 404 para esse jogador."],
+    ["Operação atômica", "A compra mexe em caixa, jogador, contrato e transação. Ou grava tudo, ou nada (transação do banco). Isso vale ponto no B2."],
+    ["400 · 404 · 409", "<b>400</b>: pedido mal formado. <b>404</b>: não existe. <b>409</b>: existe e está bem formado, mas fere uma regra de negócio. Cheque sempre nessa ordem."]
+  ],
+  flow: true,
+  steps: [
+    "Leia na ordem que o próprio enunciado sugere: Objetivo → Como funciona → glossário → barema → Premissas → Funcionalidades → Endpoints.",
+    "Leia o <code>barema.md</code> inteiro. Os itens B01–B22 e F01–F14 são a sua lista de aceitação: é exatamente o que vai ser testado.",
+    "Abra o mockup no Figma e passe por todas as telas. O visual não conta ponto, mas o fluxo sim.",
+    "Calcule <b>à mão</b> 2 ou 3 linhas de cada tabela de exemplo (valor de mercado, overall, valor base, taxa, multa, comissão, duelos). Se bater, você entendeu a regra.",
+    "Monte a matriz de rastreabilidade (aba Anexos): uma linha por regra, V1–V9 e RN01–RN21.",
+    "Leia as issues já abertas em <a href=\"https://github.com/isi-tics/desafio-isi-dev-1/issues\" target=\"_blank\" rel=\"noopener\">github.com/isi-tics/desafio-isi-dev-1/issues</a>.",
+    "Envie suas dúvidas até <b>qui 15/10, 23h59</b>. Uma boa dúvida cita a regra e dá um exemplo concreto."
+  ],
+  check: [
+    "Explico sem olhar o que acontece numa compra e numa venda, com os números do exemplo do Meia Lua.",
+    "Calculei à mão pelo menos uma linha de cada tabela e bati com o resultado.",
+    "Sei dar um exemplo de 400, de 404 e de 409.",
+    "Matriz de rastreabilidade criada.",
+    "Dúvidas enviadas (ou decidi que não tenho)."
+  ],
+  interview: [
+    ["Por que o valor de mercado não é uma coluna?", "Porque depende da condição e da idade atuais. Gravá-lo criaria um dado duplicado que fica desatualizado."],
+    ["Transação do histórico e transação do banco são a mesma coisa?", "Não. Uma é o registro de negócio (compra ou venda). A outra é o mecanismo do banco que garante que tudo é gravado junto, ou nada."]
+  ]
+};
+
+B[2] = {
+  title: "Decidir a arquitetura e a stack", day: "qua 14/10", points: "Evita eliminação",
+  goal: "Escolher as tecnologias dentro da lista permitida e saber justificar cada uma.",
+  table: {
+    head: ["Camada", "Escolha", "Por que (sua justificativa)"],
+    rows: [
+      ["Backend", "Node.js 22 LTS + NestJS + TypeScript", "Já organiza o projeto em módulo/controller/service (pontua em “camadas”), tem validação declarativa, filtro central de erros e Swagger quase automático."],
+      ["ORM", "Prisma", "Migrations versionadas (B3), consultas parametrizadas (segurança), transações com <code>$transaction</code>."],
+      ["Banco", "PostgreSQL 16 no Docker", "Aceito e com <code>NUMERIC</code> para dinheiro. No Docker, a banca não precisa instalar nada."],
+      ["Dinheiro", "Decimal (decimal.js do Prisma)", "<code>0.1 + 0.2 !== 0.3</code> em JavaScript. O script confere centavo por centavo."],
+      ["Frontend", "React + Vite (template react-ts)", "Permitido e simples. Fugir do Next.js evita o risco de eliminação por Route Handler que calcula."],
+      ["Rotas", "React Router (modo biblioteca)", "Permitido. O modo framework é proibido."],
+      ["Dados", "TanStack Query", "Camada de acesso à API em hooks (F2), <code>isPending</code> contra clique duplo (F3), recarrega dados após cada ação."],
+      ["Formulários", "React Hook Form + Zod", "Validação antes de enviar, com mensagem junto ao campo (F2)."],
+      ["Estilo", "Tailwind CSS", "Facilita o diferencial de 375 px."],
+      ["Testes", "Jest (back) · Vitest + Testing Library (front)", "Diferenciais B5 e F5."],
+      ["Qualidade", "ESLint + Prettier nos dois", "Diferenciais B5 e F5."]
+    ]
+  },
+  understand: [
+    ["Por que uma pasta domain/", "O barema (B2) exige que cada um dos 6 cálculos (valor de mercado, overall, taxa, multa, comissão, placar) esteja em <b>um único lugar</b>. Funções puras são fáceis de testar e difíceis de duplicar sem perceber."],
+    ["Idioma do código", "Identificadores em <b>inglês</b>: o barema penaliza nomes em mais de um idioma. Exceções: tabelas e colunas do banco (português, pelo enunciado) e campos da API em snake_case."],
+    ["Textos", "Telas e mensagens de erro em português. Commits em português, no padrão <code>feat(players): cadastro com cálculo do valor base</code>."],
+    ["Alternativa", "Express + Zod também serve, mas você montaria à mão as camadas, o tratamento de erros e o Swagger. Escolha uma e não troque no meio."]
+  ],
+  code: { lang: "estrutura", text:
+"mercado-de-jogadores/\n├── backend/\n│   ├── prisma/  schema.prisma · migrations/\n│   ├── src/\n│   │   ├── main.ts            prefixo /api/v1, CORS, pipes, filtro de erros\n│   │   ├── common/            filtros, validadores, datas, texto\n│   │   ├── domain/            FUNÇÕES PURAS: um lugar para cada cálculo\n│   │   │   ├── money.ts · overall.ts · base-value.ts · market-value.ts\n│   │   │   ├── purchase.ts · sale.ts · ordering.ts · match-engine.ts\n│   │   ├── prisma/            PrismaService\n│   │   ├── players/ · clubs/ · market/ · league/\n│   ├── test/\n│   └── .env.example\n├── frontend/\n│   └── src/\n│       ├── api/               ÚNICO lugar com fetch\n│       ├── hooks/             TanStack Query\n│       ├── components/        DataTable, FormField, Feedback, ConfirmDialog\n│       ├── pages/ · utils/ · types/\n├── docker-compose.yml\n├── .gitignore · .gitattributes\n└── README.md" },
+  check: [
+    "Sei dizer por que escolhi cada tecnologia.",
+    "Todas estão na lista permitida (Node 20/22, React 18+, Vite, PostgreSQL 14+).",
+    "A estrutura de pastas está decidida."
+  ]
+};
+
+B[3] = {
+  title: "Ambiente e repositório Git", day: "qua 14/10", points: "B4 · F4",
+  goal: "Máquina pronta, repositório criado e o primeiro commit enviado.",
+  table: {
+    head: ["Ferramenta", "Versão", "Verificar com"],
+    rows: [
+      ["Node.js", "22 LTS (nodejs.org)", "<code>node -v</code>"],
+      ["Git", "atual", "<code>git --version</code>"],
+      ["Docker Desktop", "atual, com WSL 2", "<code>docker compose version</code>"],
+      ["VS Code", "ESLint, Prettier, Prisma, REST Client", "—"],
+      ["WSL 2 + Ubuntu 24.04", "opcional, muito útil no bloco 22", "<code>wsl -l -v</code>"]
+    ]
+  },
+  steps: [
+    { html: "Configure o Git com o e-mail <b>privado (noreply)</b> do GitHub. Em <i>Settings → Emails</i>, marque “Keep my email addresses private” e copie o endereço.", code:
+"git config --global user.name \"Seu Nome\"\ngit config --global user.email \"xxxx+usuario@users.noreply.github.com\"" },
+    { html: "Crie o repositório (pode começar privado; precisa estar público às 12h de 26/10).", code:
+"cd ~/Downloads/Desafio\nmkdir mercado-de-jogadores && cd mercado-de-jogadores\ngit init -b main\nmkdir backend frontend" },
+    "Crie o <code>.gitignore</code> (<code>node_modules/</code>, <code>dist/</code>, <code>.env</code>, <code>coverage/</code>). <b>Não</b> ignore <code>package-lock.json</code> nem <code>.env.example</code>.",
+    "Crie o <code>.gitattributes</code> com <code>* text=auto eol=lf</code>. Você está no Windows e a banca no Ubuntu: isso evita scripts quebrados por fim de linha CRLF.",
+    { html: "Primeiro commit e push:", code:
+"git add .\ngit commit -m \"chore: estrutura inicial do repositório com pastas backend e frontend\"\ngit remote add origin https://github.com/SEU_USUARIO/mercado-de-jogadores.git\ngit push -u origin main" }
+  ],
+  callouts: [
+    ["danger", "<b>Node 24 não é permitido.</b> O enunciado aceita só Node.js 20 LTS ou 22 LTS. Se <code>node -v</code> mostrar <code>v24.x</code>, instale o 22 com o <code>nvm-windows</code> (<code>nvm install 22</code> e <code>nvm use 22</code>). No projeto, fixe com <code>\"engines\": { \"node\": \"22.x\" }</code> no <code>package.json</code> e um <code>.nvmrc</code> com <code>22</code>."],
+    ["warn", "<b>Regras de Git que valem ponto:</b> ≥ 10 commits que alteram <code>backend/</code> e ≥ 10 que alteram <code>frontend/</code>; push em ≥ 3 dias diferentes; no máximo metade das mensagens genéricas (<i>ajuste, fix, update, wip, teste, final…</i> sozinhas). Nunca use <code>git push --force</code>."]
+  ],
+  check: [
+    "node, docker compose e git respondem no terminal.",
+    "Repositório no GitHub com o primeiro push feito.",
+    "Commits saem com o e-mail noreply (confira com git log --format='%ae')."
+  ],
+  commits: ["chore: estrutura inicial do repositório com pastas backend e frontend"]
+};
+
+B[4] = {
+  title: "Banco de dados", day: "qui 15/10", points: "B3 · 6 pts",
+  goal: "As 7 tabelas criadas por migration, com os nomes exatos do enunciado, e comandos para criar e recriar o banco do zero.",
+  understand: [
+    ["Migration", "Arquivo SQL versionado que leva o banco de uma versão para a próxima. Quem clonar roda <code>prisma migrate deploy</code> e tem o mesmo banco."],
+    ["@@map e @map", "No código o modelo é <code>Player</code> e o campo é <code>baseValue</code>; no banco viram <code>jogadores.valor_base</code>. Banco em português, código em inglês."],
+    ["Chave estrangeira", "Liga tabelas: <code>jogadores.clube_id → clubes.id</code>."],
+    ["UNIQUE no banco", "A banca testa inserindo direto no banco. A unicidade precisa estar lá, não só no código."],
+    ["Tipos", "Dinheiro em <code>DECIMAL</code> com a precisão do enunciado (<code>@db.Decimal(6, 2)</code>). Datas em <code>TIMESTAMPTZ</code>."]
+  ],
+  callouts: [
+    ["danger", "<b>As 3 armadilhas do B3.</b> (1) Nome do clube único sem diferenciar maiúsculas, mas diferenciando acentos: use uma coluna <code>nome_normalizado</code> UNIQUE (o enunciado permite). (2) <code>escalacoes</code> com chave primária composta (<code>clube_id</code>, <code>jogador_id</code>) <b>e</b> UNIQUE em <code>jogador_id</code>. (3) Nenhuma coluna de valor calculado."],
+    ["warn", "O <code>prisma migrate reset</code> roda o <i>seed</i> sozinho se existir. O banco precisa começar vazio: use <code>--skip-seed</code>."]
+  ],
+  steps: [
+    "Peça à IA para criar o projeto Nest em <code>backend/</code> e configurar o Prisma.",
+    "Peça um <code>docker-compose.yml</code> na raiz com o serviço <code>db</code> (imagem pública <code>postgres:16</code>, porta 5432, volume nomeado).",
+    "Peça o <code>schema.prisma</code> colando a seção “3. Estrutura de tabelas” inteira no prompt.",
+    "Confira você mesma, coluna por coluna. Cada coluna faltando é um desvio; 3 desvios zeram o critério.",
+    { html: "Suba e migre:", code: "docker compose up -d db\ncd backend\ncp .env.example .env\nnpm install\nnpx prisma migrate dev --name init" },
+    { html: "Teste a recriação e olhe as tabelas:", code: "npx prisma migrate reset --force --skip-seed\nnpx prisma studio" }
+  ],
+  prompt: "[CONTEXTO do modelo de prompt]\nTAREFA: criar o schema Prisma e a primeira migration.\nREGRAS: [cole \"3. Estrutura de tabelas\" e a RN10]\nRequisitos:\n- Modelos em inglês (Player, Club, Contract, Transaction, Lineup, Match, MatchDuel) mapeados com @@map/@map\n  para os nomes EXATOS do enunciado.\n- Dinheiro em Decimal com a precisão do enunciado. Datas em Timestamptz.\n- Unicidade do nome do clube conforme a RN10 via coluna nome_normalizado UNIQUE.\n- escalacoes com PK composta (clube_id, jogador_id) e UNIQUE em jogador_id.\n- Nenhuma coluna para valores calculados.\nMostre o schema antes de gerar a migration.",
+  check: [
+    "As 7 tabelas existem com todos os nomes de colunas do enunciado.",
+    "No psql: 'Águias FC' e depois 'águias fc' → erro; 'Aguias FC' → aceito.",
+    "migrate reset --force --skip-seed recria tudo vazio."
+  ],
+  commits: ["chore(backend): cria projeto NestJS com Prisma", "feat(db): schema das 7 tabelas e migration inicial", "chore: docker compose com PostgreSQL 16"],
+  interview: [
+    ["Por que DECIMAL e não FLOAT para dinheiro?", "Float não representa exatamente valores como 0,1. Somas e arredondamentos erram no centavo. DECIMAL guarda o valor exato."],
+    ["Como “Águias FC” e “águias fc” não coexistem, mesmo inserindo direto no banco?", "A aplicação grava o nome normalizado (espaços ajustados, minúsculas, com acentos) numa coluna com UNIQUE. O banco recusa a duplicata."]
+  ]
+};
+
+B[5] = {
+  title: "Esqueleto da API", day: "qui 15/10", points: "B01 · B02 · B5",
+  goal: "Uma API sem regras de negócio, mas que já responde exatamente como o enunciado exige em erros, prefixo, CORS, validação e logs.",
+  table: {
+    head: ["Peça", "O que faz", "Regra"],
+    rows: [
+      ["Prefixo /api/v1", "Todas as rotas começam com ele", "Convenções"],
+      ["Filtro global de exceções", "Toda recusa vira <code>{ \"message\": \"texto\" }</code>, sem stack trace, com <code>Content-Type: application/json</code>", "B02 · B2"],
+      ["Rota inexistente", "<code>GET /api/v1/inexistente</code> → 404 em JSON", "B02"],
+      ["JSON inválido", "Corpo malformado ou <code>[]</code>, <code>\"x\"</code>, <code>10</code> → 400", "V1"],
+      ["ValidationPipe", "<code>whitelist: true</code>, <b>sem</b> <code>forbidNonWhitelisted</code>: campos extras são ignorados", "V7"],
+      ["Sem conversão de tipos", "<code>\"15\"</code> (texto) num inteiro é recusado", "V2"],
+      ["Id na URL", "<code>abc</code>, <code>0</code>, <code>-1</code>, <code>1.5</code>, <code>01</code>, &gt; 2147483647 → <b>404</b>", "V8"],
+      ["CORS", "Só a origem do frontend, lida de <code>CORS_ORIGIN</code>", "B2"],
+      ["Log de requisições", "Uma linha: data e hora, método, caminho, status. Logger do Nest, nunca <code>console.log</code>", "B5"],
+      ["Swagger", "Em <code>/api/docs</code>", "B5"],
+      ["ESLint + Prettier", "<code>npm run lint</code> e <code>npm run format:check</code> (só verifica)", "B5"]
+    ]
+  },
+  understand: [
+    ["Nomes (V4)", "Tirar espaços das pontas, juntar espaços repetidos, recusar tab e quebra de linha (400). Texto vazio conta como ausente."],
+    ["Datas de entrada (RN01)", "Formato exato <code>AAAA-MM-DDTHH:MM-03:00</code>. A data tem que existir: <code>2027-02-30</code> e <code>24:00</code> → 400. Não deixe o <code>new Date()</code> ajustar sozinho."],
+    ["Datas de saída", "Sempre <code>AAAA-MM-DDTHH:MM:SS-03:00</code>. O banco guarda UTC; na resposta, converte para −3h."],
+    ["message em texto", "O ValidationPipe do Nest devolve <code>message</code> como array. O filtro de exceções junta tudo numa string."]
+  ],
+  prompt: "[CONTEXTO]\nTAREFA: montar a fundação da API NestJS, ainda sem regras de negócio.\nREGRAS: [cole \"Validação dos dados\" (V1 a V9), \"Datas e horas\" (RN01), \"Convenções da API\" e \"2.5 Códigos de erro globais\"]\nPreciso de:\n1. prefixo /api/v1; CORS só para process.env.CORS_ORIGIN;\n2. filtro global de exceções: sempre {message: string}, Content-Type application/json, sem stack trace, 500 genérico;\n3. 404 em JSON para rota inexistente; 400 para JSON inválido ou corpo que não seja objeto;\n4. ValidationPipe com whitelist (ignora extras), SEM forbidNonWhitelisted e SEM conversão implícita de tipos;\n5. um pipe para ids da URL: só dígitos sem zero à esquerda e até 2147483647, senão 404;\n6. utilitários em src/common: normalização de nome (V4), parse estrito de data (RN01) e formatação -03:00;\n7. log de cada requisição com o Logger do Nest (data e hora, método, caminho, status);\n8. Swagger em /api/docs; ESLint e Prettier com scripts lint e format:check;\n9. testes unitários para os utilitários de nome e de data, com casos válidos e inválidos do enunciado.\nPrimeiro me mostre o plano.",
+  code: { lang: "REST Client (.http)", text:
+"### rota inexistente -> 404 JSON\nGET http://localhost:3000/api/v1/inexistente\n\n### array como corpo -> 400\nPOST http://localhost:3000/api/v1/players\nContent-Type: application/json\n\n[]" },
+  check: [
+    "Toda resposta de erro tem message em texto e Content-Type application/json.",
+    "Nenhuma resposta mostra stack trace.",
+    "O log mostra uma linha por requisição.",
+    "/api/docs abre.",
+    "npm run lint e npm run format:check passam."
+  ],
+  commits: ["feat(api): prefixo /api/v1, CORS por variável de ambiente e filtro global de erros", "feat(api): validação de id da URL e de corpo JSON", "feat(common): normalização de nomes e datas no horário de Brasília", "chore(backend): ESLint, Prettier, Swagger e log de requisições"],
+  interview: [
+    ["Onde ficam tratados os erros?", "Num filtro global. Os services só lançam exceções (BadRequest, NotFound, Conflict) e o filtro monta a resposta."],
+    ["Por que id “abc” dá 404 e não 400?", "Porque a regra V8 do enunciado manda tratar id inválido na URL como recurso inexistente."]
+  ]
+};
+
+B[6] = {
+  title: "O domínio: os cálculos", day: "sex 16/10", points: "≈ 13 pts do B1",
+  goal: "Todos os cálculos como funções puras, com todas as tabelas de exemplo do enunciado viradas testes, todos passando. É o bloco mais importante do projeto.",
+  understand: [
+    ["Função pura", "Mesma entrada, mesma saída. Não acessa banco e não pega a hora sozinha: o “agora” vem por parâmetro. Por isso dá para testar com as tabelas."],
+    ["Arredondar dinheiro", "2 casas, metade <b>para longe do zero</b> (14,775 → 14,78; 0,385 → 0,39), <b>uma única vez, no final</b>. No decimal.js, isso é <code>ROUND_HALF_UP</code>."],
+    ["Arredondar inteiros", "Overall e atributos na partida: metade para cima (72,5 → 73). Dá para fazer só com inteiros, sem float."],
+    ["Nunca no meio da conta", "Comissão: 10% × 10,00 + 20% × 0,01 = 1,002 → 1,00. Soma tudo e só então arredonda."]
+  ],
+  table: {
+    head: ["Arquivo", "Função", "Regra", "Casos de teste"],
+    rows: [
+      ["money.ts", "<code>roundMoney</code>", "Premissas", "14,775 → 14,78 · 0,385 → 0,39"],
+      ["overall.ts", "<code>calculateOverall</code>", "RN06", "5 linhas"],
+      ["base-value.ts", "<code>calculateBaseValue</code>", "RN06", "9 linhas"],
+      ["market-value.ts", "<code>calculateMarketValue</code>", "RN02–RN05", "10 linhas"],
+      ["purchase.ts", "<code>calculatePurchaseFee</code>, <code>exceedsCashLimit</code>", "RN13", "5 linhas"],
+      ["sale.ts", "<code>remainingDays</code>, <code>penaltyRate</code>, <code>calculatePenalty</code>, <code>calculateCommission</code>", "RN15 · RN16", "7 + 6 + 5 linhas"],
+      ["ordering.ts", "<code>compareNames</code>, <code>POSITION_ORDER</code>", "Premissas · RN11", "Épsilon entre Delta e Gama"],
+      ["match-engine.ts", "<code>playMatch</code>", "RN20", "Águias 1 × 2 Delta"]
+    ]
+  },
+  calc: true,
+  callouts: [
+    ["tip", "<b>Valor de mercado, passo a passo:</b> (1) desconto pela condição: APTO 0, MAL_CONDICIONADO 15, DOENTE 30; (2) se não está APTO, agilidade 80–100 → desconto ÷ 2, agilidade 1–30 → desconto + 10; (3) idade até 21 → +10, 22–31 → 0, 32+ → −10; (4) total = idade − desconto, mínimo −40; (5) base × (100 + total) ÷ 100, arredondado, mínimo 1,00."],
+    ["warn", "<b>Detalhes que pegam:</b> taxa só se o valor for <b>maior</b> que 30,00. Limite de 50% <b>sem arredondar</b> a metade do caixa. Dias restantes arredondados <b>para cima</b>. Multa com teto de 10,00. Ordem alfabética por código Unicode depois de tirar acentos, <b>não</b> com <code>localeCompare</code>."]
+  ],
+  prompt: "[CONTEXTO]\nTAREFA: criar src/domain com funções PURAS para todos os cálculos, e testes com Jest.\nREGRAS: [cole Premissas (arredondamento e ordem alfabética), RN02 a RN06 com as tabelas de pesos,\nRN13, RN15, RN16 e RN20, com TODAS as tabelas de exemplo]\nRequisitos:\n- Dinheiro com Decimal (decimal.js do Prisma), arredondando para 2 casas com ROUND_HALF_UP (metade para longe do zero),\n  uma única vez, no fim de cada cálculo. Inteiros (overall, atributos na partida) com metade para cima, em aritmética inteira.\n- Nenhuma função acessa banco nem pega a hora atual: o \"agora\" é parâmetro.\n- Cada tabela de exemplo do enunciado vira um teste com test.each, linha por linha.\n- Cada cálculo existe em UM só lugar; os services vão importar daqui.\nPrimeiro o plano com as assinaturas das funções.",
+  check: [
+    "npm test termina sozinho (sem watch), com todos os testes verdes.",
+    "Existe um teste para cada linha de cada tabela do enunciado.",
+    "Refiz à mão uma linha de cada tabela e entendo o código que a calcula.",
+    "As fórmulas aparecem só em src/domain (busquei 0.05, 0.85, / 100 no projeto)."
+  ],
+  commits: ["feat(domain): arredondamento monetário para longe do zero", "feat(domain): overall por pesos da posição e valor base progressivo", "feat(domain): valor de mercado por condição, agilidade e idade", "feat(domain): taxa de compra, multa por fidelidade e comissão progressiva", "feat(domain): motor de partida com 6 duelos", "test(domain): casos das tabelas do enunciado"],
+  interview: [
+    ["Calcule o valor de mercado deste jogador.", "Use a calculadora desta aba para treinar até fazer de cabeça."],
+    ["Por que funções puras?", "São fáceis de testar, não se repetem e ficam separadas do framework."],
+    ["Como garantiu que os cálculos estão certos?", "As tabelas do enunciado viraram testes automatizados, linha por linha."]
+  ]
+};
+
+B[7] = {
+  title: "Jogadores: CRUD e condição", day: "sex 16/10", points: "≈ 6 pts",
+  goal: "POST, GET por id, PUT, PATCH de condição e DELETE de jogadores funcionando (itens B01, B02, B03, B04, B06 e B08).",
+  understand: [
+    ["Cadastro (POST)", "201 + <code>Location: /api/v1/players/{id}</code>. Nome com ≥ 2 palavras e sem dígitos; posição em maiúsculas; agilidade ≤ 85 se idade ≥ 35; atributos 1–99 com soma ≤ 480; potencial ≥ maior atributo (igual, se idade ≥ 33). Nasce APTO, sem clube, com <code>base_value</code> calculado e gravado."],
+    ["Campos ignorados", "<code>id</code>, <code>club_id</code>, <code>condition</code>, <code>base_value</code>, <code>overall</code>, <code>market_value</code> e qualquer campo desconhecido: ignorados, sem erro."],
+    ["Um único mapper", "Uma função monta a resposta do jogador, com <code>overall</code> e <code>market_value</code> calculados na hora. Ela será reusada no clube, na escalação e na listagem."],
+    ["Edição (PUT)", "Exige nome, posição, agilidade e idade. Atributos, potencial e valor base não mudam. Mudar a posição de quem tem clube → 409. Idade menor → 409."],
+    ["Condição (PATCH)", "DOENTE → APTO direto → 409. Mesma condição → 200, sem mudança. Virou DOENTE e era titular → sai da escalação, na mesma transação."],
+    ["Exclusão (DELETE)", "204 sem corpo. Só jogador livre (com clube → 409). Depois disso, 404 em tudo."],
+    ["Ordem das checagens", "(1) formato → 400; (2) existência → 404; (3) regra de negócio → 409."]
+  ],
+  prompt: "[CONTEXTO]\nTAREFA: módulo players com POST, GET /:id, PUT /:id, PATCH /:id/condition e DELETE /:id.\nREGRAS: [cole \"Cadastro de Jogadores\", RN06, RN08, RN09, a tabela \"Limites de cada campo\" (linhas de jogador),\ne os exemplos 2.1.2 a 2.1.6]\nRequisitos:\n- DTOs com class-validator para cada endpoint; validações que cruzam campos (soma <= 480, potencial,\n  agilidade com 35+) como validadores reutilizáveis, não como if no controller.\n- Controller só recebe e responde; regras no PlayersService; cálculos importados de src/domain.\n- Um único mapper toPlayerResponse() que calcula overall e market_value.\n- 201 com header Location. 204 sem corpo no DELETE.\n- Jogador com excluido_em preenchido = 404 em todos os endpoints.\n- A alteração para DOENTE remove o jogador da escalação dentro de prisma.$transaction.\nMostre o plano primeiro.",
+  table: {
+    head: ["Pedido que você testa", "Esperado"],
+    rows: [
+      ["Cadastro do Meia Lua (exemplo 2.1.3)", "201, base_value 40.00, overall 75, market_value 40.00, Location"],
+      ["Mesmo cadastro com <code>\"base_value\": 999</code>", "201, base_value continua 40.00"],
+      ["<code>\"name\": \"  Meia   Lua \"</code>", "grava “Meia Lua”"],
+      ["<code>\"name\": \"Ana\"</code> ou <code>\"Ana 2\"</code>", "400"],
+      ["<code>\"agility\": \"15\"</code> ou <code>50.5</code>", "400"],
+      ["<code>\"position\": \"mei\"</code>", "400"],
+      ["<code>\"Agility\": 50</code> no lugar de <code>agility</code>", "400 (obrigatório ausente)"],
+      ["Soma dos atributos = 481", "400"],
+      ["PATCH para MAL_CONDICIONADO", "market_value 37.00"],
+      ["PATCH de DOENTE para APTO", "409"],
+      ["PUT com idade menor", "409"],
+      ["DELETE e depois GET", "204 → 404"],
+      ["<code>GET /players/abc</code>, <code>/0</code>, <code>/01</code>", "404"]
+    ]
+  },
+  check: [
+    "Testei todos os pedidos da tabela acima.",
+    "A resposta do jogador sai de um único mapper.",
+    "Nenhum controller acessa o Prisma diretamente."
+  ],
+  commits: ["feat(players): cadastro com validações e cálculo do valor base", "feat(players): consulta com overall e valor de mercado calculados", "feat(players): edição com bloqueio de posição e de idade menor", "feat(players): alteração de condição física", "feat(players): exclusão lógica de jogador livre"]
+};
+
+B[8] = {
+  title: "Listagem de jogadores", day: "sáb 17/10", points: "B07 · base do F01/F02",
+  goal: "GET /players com busca, filtros combinados, ordenação e paginação, e todos os query params validados.",
+  table: {
+    head: ["Opção", "Como", "Prós", "Contras"],
+    rows: [
+      ["<b>A (recomendada)</b>", "Filtros simples no <code>where</code>; valor de mercado com a função do domínio; filtro por valor, ordenação e paginação em memória", "Fórmula num só lugar; fácil de explicar", "Não escala para milhões de jogadores (aqui não importa)"],
+      ["B", "Reescrever a fórmula em SQL", "Escala", "Mais difícil e mais código para explicar"]
+    ]
+  },
+  understand: [
+    ["Inteiros", "<code>page</code>, <code>limit</code>, <code>min_age</code>, <code>max_age</code>, <code>club_id</code>: só dígitos, sem zero à esquerda. <code>page=0</code>, <code>01</code>, <code>1.0</code> → 400."],
+    ["Decimais", "<code>min_value</code>/<code>max_value</code>: <code>10</code>, <code>10.5</code> ou <code>10.55</code>, de 0 a 550."],
+    ["Vazio e desconhecido", "<code>position=</code> → 400. Parâmetro com nome desconhecido → ignorado."],
+    ["sort", "Até 2 valores, sem repetir o campo (<code>value_asc,value_desc</code> → 400). Desempate final: nome, depois id."],
+    ["Contraditórios", "<code>free=true</code> + <code>club_id</code> → 400. <code>min &gt; max</code> → 400. <code>club_id</code> inexistente → 404."],
+    ["search", "2–100 caracteres depois da V4. “Contém”, ignorando maiúsculas e acentos."],
+    ["meta", "<code>total_pages</code> = teto(total ÷ limit), 0 sem itens. Página além da última → 200 com <code>data: []</code>."]
+  ],
+  callouts: [["tip", "Registre a escolha no README, em “Decisões e premissas”: <i>“A listagem calcula o valor de mercado em memória para manter a fórmula num único lugar; adequado ao volume esperado da liga.”</i>"]],
+  prompt: "[CONTEXTO]\nTAREFA: GET /players com busca, filtros, ordenação e paginação.\nREGRAS: [cole RN07, a tabela de paginação, \"1. Filtros e query params aceitos\" (linhas de /players e \"Regras que valem para todos\")]\nDecisão: filtros simples no where do Prisma; valor de mercado calculado com a função do domínio;\nfiltro por valor, ordenação (com compareNames do domínio) e paginação em memória.\nValidação dos query params num DTO/pipe próprio e reutilizável (nada de if no controller).\nEscreva testes unitários da ordenação e da paginação com a tabela do enunciado.",
+  check: [
+    "?search=joao encontra “João Silva”; ?search=LUA encontra “Meia Lua”.",
+    "?sort=position dá GOL, ZAG, LAT, MEI, ATA.",
+    "23 jogadores com limit=10&page=3 → 3 itens, total_pages 3.",
+    "?position=mei, ?free=true&club_id=1 e ?page=0 → 400."
+  ],
+  commits: ["feat(players): listagem paginada com busca sem acentos", "feat(players): filtros combinados e ordenação com desempate"]
+};
+
+B[9] = {
+  title: "Clubes", day: "sáb 17/10", points: "B09 · B17",
+  goal: "POST /clubs, GET /clubs e GET /clubs/{id}, com elenco ordenado e os dados de contrato.",
+  understand: [
+    ["Nome", "Depois da V4: 3–60 caracteres, 2 a 5 palavras, só letras (com acento), espaço, hífen e ponto."],
+    ["Sigla", "3 letras A–Z maiúsculas; a 1ª é a 1ª letra do nome; as 3 aparecem no nome nessa ordem (ignorando caixa e acentos); não podem ser as 3 iguais. “Águias FC” → <code>AGU</code> ✓, <code>AFC</code> ✓, <code>GUA</code> ✗."],
+    ["Como validar a sigla", "É um problema de <b>subsequência</b>: procure a 1ª letra no nome, depois a 2ª a partir dali, depois a 3ª."],
+    ["Conflitos", "Nome repetido (RN10), sigla repetida, 21º clube → 409. Formato inválido → 400."],
+    ["Detalhe", "Elenco na ordem GOL, ZAG, LAT, MEI, ATA → nome → id. Cada jogador com o mapper + <code>contract</code> (purchase_value, loyalty_until, remaining_days, penalty_rate), usando as mesmas funções da venda."],
+    ["Totais", "<code>squad_value</code> = soma dos valores de mercado; <code>net_worth</code> = caixa + elenco."],
+    ["Lista", "<code>?sort=name|net_worth_asc|net_worth_desc</code> (padrão <code>name</code>). Empate → nome → id. Outro valor → 400."]
+  ],
+  callouts: [["tip", "Mesmo verificando antes, trate também o erro de unicidade do banco (código <code>P2002</code> do Prisma) como 409. Fica correto até com dois pedidos ao mesmo tempo."]],
+  check: [
+    "Criar “Águias FC”/AGU → 201, Location, cash 300.",
+    "“  águias   fc ” → 409; “Aguias FC” com outra sigla → 201.",
+    "Sigla XYZ para “Águias FC” → 400.",
+    "Criar 21 clubes → o último dá 409."
+  ],
+  commits: ["feat(clubs): criação com nome único, validação da sigla e limite de 20", "feat(clubs): listagem ordenável por nome e patrimônio", "feat(clubs): detalhe com elenco ordenado e dados do contrato"]
+};
+
+B[10] = {
+  title: "Mercado: compra e venda", day: "dom 18/10", points: "10 pts · o mais valioso",
+  goal: "POST /players/{id}/buy e POST /players/{id}/sell, com tudo gravado numa transação do banco (itens B10 a B16).",
+  understand: [
+    ["Compra · 400", "Corpo; <code>club_id</code> inteiro positivo; <code>loyalty_until</code> no formato da RN01, data real, depois de agora e até 1.095 dias."],
+    ["Compra · 404", "Jogador inexistente ou excluído; clube inexistente."],
+    ["Compra · 409", "Jogador não está livre; o clube já vendeu esse jogador antes; elenco com 12; custo &gt; 50% do caixa."],
+    ["Compra · grava", "Caixa −= valor + taxa; jogador entra no clube; contrato ATIVO com o valor sem taxa; transação COMPRA com <code>variacao_caixa</code> = −(valor + taxa)."],
+    ["Venda · checagens", "404 se não existe ou foi excluído; 409 se está livre."],
+    ["Venda · calcula", "Valor de mercado agora; dias restantes; multa (teto 10,00); lucro = valor − valor de compra; comissão; crédito = valor − multa − comissão."],
+    ["Venda · grava", "Caixa += crédito; jogador livre; contrato RESCINDIDO (com multa) ou ENCERRADO (sem multa); transação VENDA; sai da escalação."]
+  ],
+  callouts: [
+    ["tip", "<b>Relógio injetável:</b> em vez de <code>new Date()</code> espalhado pelo código, crie um <code>ClockService</code> com <code>now()</code>. Nos testes, use um relógio fixo e simule “vender 116 dias depois” sem esperar."],
+    ["warn", "<b>Concorrência:</b> dois pedidos de compra simultâneos podem passar juntos pelo “está livre?”. Dentro da transação, faça <code>UPDATE … WHERE clube_id IS NULL</code> e confira quantas linhas mudaram. Boa pergunta de entrevista."]
+  ],
+  prompt: "[CONTEXTO]\nTAREFA: módulo market com POST /players/:id/buy e POST /players/:id/sell.\nREGRAS: [cole RN12 a RN16 com as tabelas, \"Campos da transação\", os exemplos 2.3.1 e 2.3.2,\na linha loyalty_until de \"Limites de cada campo\", RN01 e a RN19 item 5]\nRequisitos:\n- Ordem das checagens: 400 -> 404 -> 409.\n- Toda a gravação dentro de prisma.$transaction (caixa, jogador, contrato, transação, saída da escalação).\n- Cálculos importados de src/domain (nada de fórmula no service).\n- Proteção contra compra concorrente do mesmo jogador.\n- Testes do service que reproduzam o cenário do \"Meia Lua\": compra em 02/11/2026 10:15, venda em 05/11/2026 16:40\n  -> dias 117, multa 4,00, comissão 0,30, crédito 35,70, caixa 296,85 (injete o relógio como dependência).\nMostre o plano primeiro.",
+  check: [
+    "Clube novo compra o Meia Lua MAL_CONDICIONADO (37,00) → taxa 1,85, club_cash 261,15, contrato ATIVO.",
+    "GET /clubs/1 → squad_value 37, net_worth 298,15, remaining_days e penalty_rate corretos.",
+    "Caixa 100 + jogador de 48,00 → 409 (custo 50,40 > 50).",
+    "Vender jogador livre → 409. Recompra pelo mesmo clube → 409; por outro clube → 200.",
+    "Fidelidade vencida → contrato ENCERRADO, multa 0.",
+    "loyalty_until sem -03:00, no passado ou a mais de 1.095 dias → 400.",
+    "300 + soma de cash_change = caixa atual."
+  ],
+  commits: ["feat(market): compra com taxa, limite de caixa e contrato de fidelidade", "feat(market): venda com multa, comissão progressiva e crédito no caixa", "feat(market): bloqueio de recompra pelo clube vendedor"]
+};
+
+B[11] = {
+  title: "Histórico e exportação CSV", day: "dom 18/10", points: "B18 · B19 · 4 pts",
+  goal: "GET /clubs/{id}/transactions com filtros e summary, e a exportação CSV no formato exato.",
+  understand: [
+    ["Ordem", "<code>criado_em</code> decrescente; empate → id decrescente."],
+    ["Filtros", "<code>type</code> = COMPRA, VENDA ou COMPRA,VENDA (sem espaço, sem repetir). <code>player_id</code> excluído ou inexistente → 404."],
+    ["summary", "Sobre as transações <b>filtradas</b>: total_spent, total_received, total_fees, total_penalties, total_profit."],
+    ["Mesma consulta", "Histórico e CSV usam o mesmo método do service. Assim filtro e ordem não se repetem."],
+    ["CSV", "<code>text/csv</code>; UTF-8 <b>sem BOM</b>; cada linha termina em <code>\\n</code>, inclusive a última; separador <code>;</code>; vírgula decimal; <code>lucro</code> vazio quando nulo."],
+    ["Aspas", "Nome com <code>;</code> ou <code>\"</code> → entre aspas, aspas internas duplicadas: <code>\"Zé \"\"Foguete\"\" Lima\"</code>."],
+    ["Erros", "Continuam em JSON, mesmo na rota do CSV."]
+  ],
+  code: { lang: "CSV esperado", text: "data_hora;tipo;jogador;valor;taxa_ou_comissao;multa;lucro;variacao_caixa\n2026-11-05T16:40:00-03:00;VENDA;Meia Lua;40,00;0,30;4,00;3,00;35,70\n2026-11-02T10:15:00-03:00;COMPRA;Meia Lua;37,00;1,85;0,00;;-38,85" },
+  check: [
+    "Baixei o CSV com curl -o e o VS Code mostra “LF” e “UTF-8” no rodapé.",
+    "Jogador chamado Zé \"Foguete\" Lima sai com as aspas duplicadas.",
+    "Editei o nome depois da compra e o histórico manteve o nome antigo."
+  ],
+  commits: ["feat(market): histórico de transações com filtros e resumo", "feat(market): exportação do histórico em CSV"]
+};
+
+B[12] = {
+  title: "Liga: escalação, partidas e classificação", day: "seg 19/10", points: "B20–B22 · 4,5 pts",
+  goal: "Escalação, partidas, histórico de partidas e classificação, com tudo gravado com os valores do momento.",
+  understand: [
+    ["Escalação · 400", "<code>formation</code> ∈ 3-1, 2-2, 2-1-1, 1-2-1; <code>player_ids</code> com exatamente 5 inteiros positivos distintos."],
+    ["Escalação · 404 e 409", "404: clube ou jogador inexistente. 409: fora do elenco, DOENTE, ou posições que não fecham a formação (1 GOL; defesa = ZAG+LAT; meio = MEI; ataque = ATA)."],
+    ["Substitui tudo", "O PUT troca a formação e as 5 linhas numa transação. O GET devolve <code>club_id</code>, <code>formation</code>, <code>complete</code> e <code>players</code> na ordem do elenco."],
+    ["Escalação incompleta", "Venda ou DOENTE removem o titular, mas a formação fica salva → <code>complete: false</code>."],
+    ["Partida", "400 (ids inválidos ou iguais) → 404 → 409 (escalação incompleta). Chama <code>playMatch()</code> do domínio e grava a partida + 6 duelos numa transação. 201 + Location."],
+    ["Classificação", "Todos os clubes, mesmo sem jogo. Pontos → saldo → gols marcados → nome → id. Calculada a cada consulta."],
+    ["GET /matches", "Mais recente primeiro (empate → id maior), sem <code>duels</code>, filtro opcional <code>club_id</code>."]
+  ],
+  duel: true,
+  check: [
+    "Recriei o exemplo Águias FC × Delta FC → placar 1 × 2, result VISITANTE.",
+    "Vendi um titular → lineup com complete: false → POST /matches dá 409.",
+    "A classificação do exemplo com 6 clubes sai na mesma ordem do enunciado."
+  ],
+  commits: ["feat(league): escalação com validação de formação", "feat(league): partida calculada por duelos e gravada com os valores do momento", "feat(league): histórico de partidas e classificação"]
+};
+
+B[13] = {
+  title: "Revisão do backend contra o barema", day: "seg 19/10", points: "B1 · B2",
+  goal: "Encontrar os erros antes do script da banca.",
+  steps: [
+    "Passe pela tabela B01–B22 do barema, item a item. Para cada item, peça um teste <b>e2e</b> (supertest, chamando a API de verdade contra um banco de teste) que faça exatamente o que o item descreve. É o seu “script da banca caseiro”.",
+    "Revise o B2 critério a critério, usando a tabela abaixo.",
+    { html: "Peça uma revisão à IA “com olhos de avaliador”. Depois decida, uma por uma, o que corrigir.", code: "Você é avaliador(a) deste desafio. Aqui está o barema [cole B2 e B3].\nRevise o código do backend e liste cada ocorrência que perderia ponto, com arquivo e linha.\nNão corrija ainda." }
+  ],
+  table: {
+    head: ["Critério B2", "Pergunta", "Como checar"],
+    rows: [
+      ["Camadas", "Algum controller acessa o Prisma ou faz conta?", "Busque <code>prisma.</code> nos <code>*.controller.ts</code>"],
+      ["Regras de negócio", "Cada fórmula está só em <code>src/domain</code>?", "Busque <code>0.05</code>, <code>0.85</code>, <code>86400000</code>"],
+      ["Validação e erros", "Todo endpoint valida por DTO ou pipe? Toda recusa passa pelo filtro?", "Leia os controllers"],
+      ["Consistência", "Compra, venda, partida, escalação e DOENTE em <code>$transaction</code>?", "Busque <code>$transaction</code>"],
+      ["Segurança", "Sem SQL concatenado, senha só no .env, CORS por variável, .env fora do Git?", "<code>git ls-files | grep .env</code>"],
+      ["Código morto", "Código comentado, função sem uso, nome em português?", "Peça a lista à IA"]
+    ]
+  },
+  check: [
+    "Testes e2e cobrindo B01–B22 passam.",
+    "npm test, npm run lint e npm run format:check passam.",
+    "A matriz de rastreabilidade está preenchida no lado backend."
+  ],
+  commits: ["test(backend): testes e2e do fluxo de jogadores, mercado e liga", "refactor(backend): remove acesso ao banco do controller de clubes"]
+};
+
+B[14] = {
+  title: "Fundação do frontend", day: "ter 20/10", points: "F2 · F3",
+  goal: "Projeto React com navegação, camada de API, componentes compartilhados e formatadores. Sem isso, cada tela vira cópia da outra.",
+  callouts: [["warn", "<b>Regra de ouro:</b> a tela nunca recalcula o que a API devolve (valor de mercado, taxa, multa, placar…). Ela só mostra. A única conta permitida é valor + taxa = custo total."]],
+  table: {
+    head: ["Peça", "Para que", "Critério"],
+    rows: [
+      ["<code>api/client.ts</code>", "Único lugar com <code>fetch</code>. Usa <code>VITE_API_URL</code> + <code>/api/v1</code>; se a resposta falha, lança erro com o <code>message</code> da API", "F2 Acesso à API"],
+      ["<code>api/players.ts</code>…", "Uma função por endpoint", "F2"],
+      ["<code>hooks/</code>", "<code>usePlayers(filters)</code>, <code>useCreatePlayer()</code>… As mutations invalidam as queries", "F2 Atualização"],
+      ["<code>DataTable</code>", "Tabela genérica com carregando, vazio e erro embutidos", "F2 · F3"],
+      ["<code>FormField</code>", "Rótulo + campo + mensagem de erro", "F2"],
+      ["<code>Feedback</code>", "Sucesso ou o <code>message</code> da API", "F2 · F3"],
+      ["<code>ConfirmDialog</code>", "Confirmação de excluir e vender", "F03 · F08"],
+      ["<code>SubmitButton</code>", "Desabilitado enquanto envia", "F3 clique duplo"],
+      ["<code>utils/format.ts</code>", "<code>formatMoney(37) → \"37,00\"</code>; datas no fuso America/Sao_Paulo; <code>toApiDateTime(\"2027-03-02T10:15\") → \"2027-03-02T10:15-03:00\"</code>", "F3 · F06"]
+    ]
+  },
+  prompt: "[CONTEXTO do frontend: React + Vite + TS, React Router (modo biblioteca), TanStack Query, React Hook Form + Zod, Tailwind]\nTAREFA: fundação do frontend.\nREGRAS: [cole a seção \"Frontend\" inteira do enunciado e o F2/F3 do barema]\nCrie: cliente HTTP único que lança erro com o message da API; hooks de dados; componentes\nDataTable (com loading/vazio/erro), FormField, Feedback, ConfirmDialog, SubmitButton (desabilitado durante o envio\ne protegido contra clique duplo); formatadores de moeda pt-BR e de data no fuso America/Sao_Paulo;\nlayout com menu. Nenhum fetch dentro de componentes. Variável VITE_API_URL com .env.example.\nPlano primeiro.",
+  check: [
+    "Nenhum componente chama fetch diretamente.",
+    "Os componentes compartilhados existem antes da primeira tela."
+  ],
+  commits: ["chore(frontend): cria projeto Vite React TypeScript com Tailwind", "feat(frontend): cliente HTTP e hooks de dados com TanStack Query", "feat(frontend): componentes de tabela, formulário, feedback e confirmação", "feat(frontend): formatação de moeda e datas no horário de Brasília"]
+};
+
+B[15] = {
+  title: "Telas de jogadores", day: "ter 20/10", points: "F01–F04 · 7 pts",
+  goal: "Lista, filtros, cadastro, edição, condição e exclusão de jogadores pela tela.",
+  understand: [
+    ["Tabela", "Nome, posição, overall, agilidade, idade, condição, valor base, valor de mercado, clube (nome ou sigla; “Livre” se não tiver). Carregue os clubes para mostrar o nome a partir do <code>club_id</code>."],
+    ["Paginação", "10 por página, com navegação e o total encontrado (<code>meta.total_items</code>)."],
+    ["Filtros", "Busca, posição, condição, só livres, clube, idade mín/máx, valor mín/máx; ordenação por nome, valor ↑↓, idade ↑↓ e posição. Ao mudar um filtro, volte à página 1."],
+    ["Só livres + clube", "Desabilite um quando o outro estiver ativo, ou mostre o <code>message</code> da API."],
+    ["Excluir", "Só nos livres, com confirmação. O jogador some da lista."],
+    ["Cadastro", "Os 7 indicadores. Depois de salvar, mostre o overall e o valor base devolvidos pela API."],
+    ["Edição e condição", "Pode bloquear na tela DOENTE → APTO, posição de quem tem clube e idade menor, ou enviar e mostrar o <code>message</code>. Escolha um jeito e mantenha."],
+    ["Validação", "Nome 3–100; agilidade 1–100; idade 16–45; atributos e potencial 1–99; mensagem junto ao campo."]
+  ],
+  check: [
+    "Cadastrei e o jogador apareceu na lista, com valores da API, sem F5.",
+    "Um erro da API aparece com o texto da API.",
+    "Clique duplo em Salvar gera um só pedido (aba Network do DevTools)."
+  ],
+  commits: ["feat(frontend): lista de jogadores com paginação, busca e filtros", "feat(frontend): cadastro e edição de jogador", "feat(frontend): alteração de condição e exclusão com confirmação"]
+};
+
+B[16] = {
+  title: "Clubes, página do clube, compra e venda", day: "qua 21/10", points: "F05–F08 · 7 pts",
+  goal: "Lista e criação de clubes, página do clube com elenco e contratos, e os fluxos de compra e venda.",
+  understand: [
+    ["Lista de clubes", "Nome, sigla, caixa, valor do elenco, patrimônio. Ordenar por nome e por patrimônio ↓ passando o <code>sort</code> para a API. Não reordene na tela."],
+    ["Criação", "Nome 3–60, sigla de 3 letras."],
+    ["Página do clube", "Abas Elenco · Histórico · Escalação. Elenco com caixa, valor do elenco, patrimônio e, por jogador, valor de mercado, fim da fidelidade, dias restantes e % de multa."],
+    ["Compra", "A partir do jogador livre: escolher o clube, digitar data e hora (<code>datetime-local</code>), enviar com <code>-03:00</code>. Resultado: valor, taxa, custo total, fidelidade, novo caixa."],
+    ["Venda", "Botão Vender no elenco → confirmação → resultado: valor de compra, valor de venda, dias restantes, multa, lucro, comissão, crédito, novo caixa."],
+    ["Atualização", "Depois da compra, a lista de jogadores mostra o clube e “só livres” deixa de mostrar o jogador. Acontece sozinho se a mutation invalidar as queries certas."]
+  ],
+  check: [
+    "Comprei pela tela e vi valor, taxa, custo total, fidelidade e novo caixa.",
+    "Vendi pela tela e vi os 8 valores do resultado.",
+    "A lista de clubes ordenada por patrimônio segue a ordem da API."
+  ],
+  commits: ["feat(frontend): lista e criação de clubes", "feat(frontend): página do clube com elenco e contratos", "feat(frontend): compra de jogador com resultado detalhado", "feat(frontend): venda de jogador com confirmação e resultado"]
+};
+
+B[17] = {
+  title: "Histórico e Exportar CSV", day: "qua 21/10", points: "F09–F11 · 6 pts",
+  goal: "Histórico de transações na página do clube, com filtros, totais e o botão de exportar CSV.",
+  understand: [
+    ["Tabela", "Data e hora (Brasília), tipo, jogador, valor, taxa ou comissão, multa, lucro, variação do caixa com sinal (<code>+35,70</code>, <code>-38,85</code>)."],
+    ["Filtros", "Caixas COMPRA/VENDA → <code>type=COMPRA,VENDA</code>. Jogador escolhido entre os que aparecem no histórico."],
+    ["Totais", "O <code>summary</code> da API, abaixo da tabela, respeitando o filtro."],
+    ["Exportar CSV", "A função da camada de API busca o arquivo com os mesmos filtros e devolve um blob; o componente dispara o download."],
+    ["Erros", "Filtro recusado (ex.: jogador excluído → 404) mostra o <code>message</code>."]
+  ],
+  check: ["Filtrei por VENDA e os totais mudaram conforme a API.", "O CSV baixado tem os filtros aplicados."],
+  commits: ["feat(frontend): histórico de transações com filtros e totais", "feat(frontend): exportação do histórico em CSV"]
+};
+
+B[18] = {
+  title: "Liga no frontend", day: "qui 22/10", points: "F12–F14 · 7 pts",
+  goal: "Escalação, partida, histórico de partidas e classificação pela tela.",
+  understand: [
+    ["Escalação", "Escolher a formação → a tela gera as vagas (1 GOL + vagas por setor). Cada vaga é um select com os jogadores do elenco daquela posição e sem DOENTE. Depois de salvar, mostrar a escalação devolvida pela API."],
+    ["Aviso", "Com <code>complete: false</code>, avisar que o clube não pode jogar até completar a escalação."],
+    ["Partida", "Mandante e visitante diferentes → “Jogar partida” (protegido contra clique duplo!) → placar e 6 duelos da API."],
+    ["Histórico", "Data e hora, mandante, placar, visitante; filtro por clube; ao abrir, os duelos."],
+    ["Classificação", "Posição, clube, J, V, E, D, GM, GS, SG, Pts, na ordem da API."]
+  ],
+  check: ["Clique duplo em “Jogar partida” cria uma só partida.", "Clube sem escalação completa mostra o message da API."],
+  commits: ["feat(frontend): escalação com formação e vagas por setor", "feat(frontend): tela de partida com placar e duelos", "feat(frontend): histórico de partidas e classificação"]
+};
+
+B[19] = {
+  title: "Polimento: feedback, estados e testes", day: "qui 22/10", points: "F3 · F5",
+  goal: "Cumprir a usabilidade (F3) e somar os diferenciais do frontend (F5).",
+  understand: [
+    ["As 9 ações", "Cadastrar, editar e mudar a condição do jogador; excluir; criar clube; comprar; vender; escalar; jogar partida."],
+    ["As 6 listas", "Jogadores, clubes, elenco, histórico, partidas, classificação."],
+    ["Responsividade (1 pt)", "Modo dispositivo do Chrome, 375 px. Jogadores e página do clube sem rolagem horizontal da página; tabelas rolam dentro de um <code>div</code> com <code>overflow-x: auto</code>."],
+    ["Testes (1 pt)", "Vitest em modo <code>run</code>. Ex.: “DataTable mostra a lista vazia” e “formatMoney(37) retorna 37,00”."],
+    ["Lint (0,5)", "<code>npm run lint</code> e <code>npm run format:check</code>."]
+  ],
+  check: [
+    "As 9 ações mostram sucesso.",
+    "As 9 ações mostram o message da API quando recusadas.",
+    "Clique duplo gera um só pedido em todas as ações.",
+    "As 6 listas mostram carregando (Network em Slow 3G).",
+    "As 6 listas mostram vazio (banco recém-recriado).",
+    "As 6 listas mostram erro (backend desligado).",
+    "Moeda com vírgula e datas em Brasília em todas as telas.",
+    "375 px sem rolagem horizontal nas telas de jogadores e do clube.",
+    "npm test, npm run lint e npm run format:check passam no frontend."
+  ],
+  commits: ["feat(frontend): estados de carregamento, vazio e erro nas listas", "style(frontend): layout responsivo para 375px", "test(frontend): testes de componentes e formatadores", "chore(frontend): ESLint e Prettier"]
+};
+
+B[20] = {
+  title: "Docker Compose completo", day: "qui 22/10", points: "B5 · 0,5 pt",
+  goal: "Um único comando sobe banco, API e interface.",
+  steps: [
+    "<code>backend/Dockerfile</code>: <code>npm ci</code>, gera o Prisma, faz o build; ao iniciar, roda <code>prisma migrate deploy</code> e sobe a API.",
+    "<code>frontend/Dockerfile</code>: imagem <code>node:22-alpine</code>, build do Vite e <code>npm run preview -- --host 0.0.0.0 --port 5173</code> para servir. O <code>VITE_API_URL</code> é embutido no build. Não use <code>nginx</code>: o enunciado diz que o frontend é executado com Node.js 20 ou 22.",
+    "<code>docker-compose.yml</code> com <code>db</code>, <code>backend</code> e <code>frontend</code>, e <code>depends_on</code> com healthcheck no banco.",
+    { html: "Teste do zero:", code: "docker compose down -v\ndocker compose up --build" }
+  ],
+  callouts: [["warn", "Use só imagens públicas oficiais (<code>node:22-alpine</code>, <code>postgres:16</code>). Imagem sua no Docker Hub não é aceita."]],
+  check: ["Depois de docker compose up --build, a lista de jogadores abre na URL do frontend."],
+  commits: ["chore: docker compose com banco, API e interface"]
+};
+
+B[21] = {
+  title: "README final", day: "sex 23/10", points: "B3 · B4 · F4",
+  goal: "O README da raiz com cada item obrigatório numa seção própria, e comandos que funcionam como estão escritos.",
+  table: {
+    head: ["#", "Seção", "O que precisa ter"],
+    rows: [
+      ["1", "Pré-requisitos", "Nome e versão: Node.js 22, npm 10, Docker com Compose v2"],
+      ["2", "Banco", "Criar e recriar do zero, com comandos copiáveis"],
+      ["3", "Instalar e executar", "Um comando por linha, dizendo a pasta. Origem da API (sem /api/v1) e URL do frontend. Os lockfiles estão versionados."],
+      ["4", "Variáveis de ambiente", "Tabela + <code>.env.example</code> em backend/ e frontend/"],
+      ["5", "Estrutura e bibliotecas", "Pastas + motivo de cada biblioteca"],
+      ["6", "Decisões e premissas", "Valor de mercado em memória, nome_normalizado, relógio injetável, como a tela trata DOENTE → APTO…"],
+      ["7", "Não implementadas", "Lista, ou “Nenhuma”"],
+      ["8", "Uso de IA", "Ferramentas, onde, como e por quê, o que aceitou, alterou ou descartou"]
+    ]
+  },
+  code: { lang: "modelo do passo a passo", text: "# Banco de dados (na raiz do repositório)\ndocker compose up -d db\n\n# Backend (na pasta backend)\ncd backend\ncp .env.example .env\nnpm ci\nnpx prisma migrate deploy\nnpm run start:dev\n# API em http://localhost:3000 (a banca acrescenta /api/v1)\n\n# Frontend (em outro terminal, a partir da raiz)\ncd frontend\ncp .env.example .env\nnpm ci\nnpm run dev\n# Interface em http://localhost:5173\n\n# Recriar o banco do zero (na pasta backend)\nnpx prisma migrate reset --force --skip-seed" },
+  callouts: [
+    ["warn", "A banca só copia o <code>.env.example</code> para <code>.env</code> se o README mandar. Os valores do exemplo precisam funcionar como estão."],
+    ["tip", "<b>Exemplo de seção de IA:</b> “Usei o Claude Code para gerar o código, bloco a bloco. Eu escrevia o plano e as regras no prompt, revisava, rodava os testes e conferia com as tabelas do enunciado. Descartei a primeira versão da comissão, que arredondava cada faixa separadamente…”"]
+  ],
+  check: ["As 8 seções existem, cada uma com título próprio.", "Os comandos dos diferenciais estão no README (testes, lint, format:check, Docker, Swagger)."],
+  commits: ["docs: README com execução, decisões e uso de IA"]
+};
+
+B[22] = {
+  title: "Ensaio em máquina limpa", day: "sex 23/10", points: "Evita a nota zero",
+  goal: "Simular a banca: clonar do zero e seguir o README literalmente.",
+  steps: [
+    "Faça o push de tudo.",
+    { html: "Num ambiente limpo (ideal: WSL com Ubuntu 24.04; alternativa: outra pasta e <code>docker compose down -v</code> antes):", code: "git clone https://github.com/SEU_USUARIO/mercado-de-jogadores.git" },
+    "Siga o README <b>copiando e colando cada comando</b>, sem consertar nada de cabeça. Se precisou fazer algo que não está escrito, o README está errado: corrija e repita.",
+    "Cronometre: tudo precisa subir em menos de 30 minutos.",
+    "Percorra o fluxo completo pela tela: jogadores → clubes → compra → venda → histórico → CSV → escalação → partida → classificação.",
+    "Rode os comandos dos diferenciais."
+  ],
+  check: ["Subi do zero só com o README, em menos de 30 minutos.", "Fluxo completo funcionou pela tela."]
+};
+
+B[23] = {
+  title: "Entrega", day: "sex 23/10 · até 20h", points: "Evita eliminação",
+  goal: "E-mail enviado no prazo, com o hash certo e o repositório público.",
+  steps: [
+    { html: "Copie o hash completo do último commit (40 caracteres):", code: "git rev-parse HEAD" },
+    "Abra o link do repositório numa janela anônima para conferir que está público. Ele precisa estar público às 12h de 26/10 e continuar assim, sem reescrever histórico.",
+    { html: "Envie do e-mail em que você recebe as mensagens do RH, sem anexos:", code: "Para: igor.conde@sistemafiepe.org.br\nCc: rachel.santos@sistemafiepe.org.br\nAssunto: SENAI/PE – CÓD. 237 DESENVOLVEDOR I (FULLSTACK)\n\nNome completo: [seu nome completo]\nRepositório: https://github.com/SEU_USUARIO/mercado-de-jogadores\nCommit final: [hash de 40 caracteres]" },
+    "Se mandar de novo, vale o último e-mail recebido no prazo. Depois do envio, só o hash informado conta."
+  ],
+  check: ["Hash de 40 caracteres copiado.", "Repositório público conferido em janela anônima.", "E-mail enviado do endereço certo, antes das 20h."]
+};
+
+B[24] = {
+  title: "Preparação para a entrevista", day: "depois da entrega", points: "Etapa seguinte",
+  goal: "Dominar o porquê de cada parte. O uso de IA pode ser questionado na entrevista.",
+  steps: [
+    "Treine responder em voz alta as perguntas abaixo.",
+    "Abra 5 arquivos aleatórios do projeto e explique cada um em 1 minuto. Onde travar, peça à IA para te explicar e repita."
+  ],
+  interview: [
+    ["Explique a arquitetura do backend.", "Controller (HTTP) → service (regras e orquestração) → domain (cálculos puros) e Prisma (dados). Cada camada tem uma responsabilidade."],
+    ["Calcule o valor de mercado de um jogador.", "Use a calculadora do bloco 6 para treinar."],
+    ["Por que Decimal?", "Porque 0.1 + 0.2 em float dá 0.30000000000000004, e o arredondamento sairia errado no centavo."],
+    ["O que acontece se der erro no meio da compra?", "Tudo está numa transação do banco: o rollback desfaz caixa, jogador, contrato e histórico."],
+    ["Como evitou dois clubes comprando o mesmo jogador ao mesmo tempo?", "Atualização condicional (WHERE clube_id IS NULL) dentro da transação, conferindo as linhas afetadas."],
+    ["Como funciona a unicidade do nome do clube?", "Coluna normalizada com UNIQUE no banco."],
+    ["Como a tela sabe que precisa atualizar depois da compra?", "A mutation do TanStack Query invalida as queries de jogadores e clubes."],
+    ["Como evitou o clique duplo?", "O botão fica desabilitado enquanto o pedido está pendente."],
+    ["Onde usou IA? Dê um exemplo de algo que ela errou.", "Use o seu diário de IA. Tenha 2 ou 3 exemplos concretos."],
+    ["O que faria diferente com mais tempo?", "Mais testes e2e, cálculo em SQL para escalar, autenticação."]
+  ]
+};
+
+var TRAPS = [
+  ["Formato e validação", [
+    "\"15\" (texto) num inteiro → 400; 50.0 → aceito; 50.5 → 400.",
+    "Valores de lista diferenciam maiúsculas: \"ata\", \"TRUE\" → 400.",
+    "Campo extra ou com outro nome → ignorado; mas, se faltar o obrigatório → 400.",
+    "Corpo [], \"x\", 10 → 400. Corpo em GET, DELETE ou venda → ignorado.",
+    "Id na URL abc, 0, -1, 1.5, 01 ou > 2147483647 → 404.",
+    "Query param vazio (position=) → 400; desconhecido → ignorado.",
+    "Nome com tab ou quebra de linha → 400; espaços normalizados antes de validar.",
+    "Erros sempre {message} em JSON, inclusive na rota do CSV."
+  ]],
+  ["Cálculos", [
+    "Dinheiro arredonda uma vez, no final, metade para longe do zero.",
+    "Taxa só se o valor for > 30,00 (não ≥).",
+    "Limite de 50% sem arredondar a metade do caixa; igual ao limite é aceito.",
+    "Agilidade só mexe no desconto quando não está APTO.",
+    "Teto de −40% e piso de 1,00 no valor de mercado; piso de 1,00 no valor base.",
+    "Valor base usa a idade do cadastro e nunca muda; overall recalcula com a posição atual.",
+    "Dias restantes arredondados para cima, e 0 se já passou.",
+    "Multa com teto de 10,00.",
+    "Comissão só com lucro > 0, progressiva, arredonda no final.",
+    "MAL_CONDICIONADO na partida: × 0,85, metade para cima; empate no duelo não é gol."
+  ]],
+  ["Ordenação", [
+    "Ordem alfabética: minúsculas, sem acento, ordem Unicode (espaço < hífen < letras), não localeCompare; empate → id.",
+    "Posições: GOL, ZAG, LAT, MEI, ATA (não alfabética).",
+    "Histórico: mais recente primeiro; empate → id decrescente.",
+    "Classificação: pontos → saldo → gols marcados → nome."
+  ]],
+  ["Estado e consistência", [
+    "Jogador excluído = 404 em todos os lugares, inclusive no filtro player_id do histórico.",
+    "O clube que vendeu não recompra o mesmo jogador; outro clube pode.",
+    "Venda e DOENTE tiram o titular da escalação (complete: false), mas a formação fica salva.",
+    "Transação e duelo guardam nome e valores do momento.",
+    "300 + Σ cash_change = caixa atual."
+  ]],
+  ["Respostas", [
+    "POST /players, /clubs e /matches → 201 + Location.",
+    "DELETE → 204 sem corpo.",
+    "Datas de saída AAAA-MM-DDTHH:MM:SS-03:00.",
+    "Listas vazias → 200 com [].",
+    "CSV: text/csv, sem BOM, LF até na última linha, vírgula decimal, aspas duplicadas."
+  ]],
+  ["Entrega", [
+    "package-lock.json versionado nos dois projetos.",
+    ".env fora do Git; .env.example dentro.",
+    "migrate reset não popula o banco.",
+    "CORS só para a origem do frontend (nunca *)."
+  ]]
+];
+
+var SCHEDULE = [
+  ["2026-10-14", "qua 14/10", [1, 2, 3], "Entender tudo, ambiente pronto, repositório criado"],
+  ["2026-10-15", "qui 15/10", [4, 5], "Banco por migration; API com erros padronizados. Dúvidas até 23h59."],
+  ["2026-10-16", "sex 16/10", [6, 7], "Cálculos testados; CRUD de jogadores. Ler a errata."],
+  ["2026-10-17", "sáb 17/10", [8, 9], "Listagem com filtros; clubes"],
+  ["2026-10-18", "dom 18/10", [10, 11], "Compra, venda, histórico, CSV"],
+  ["2026-10-19", "seg 19/10", [12, 13], "Liga; revisão do backend"],
+  ["2026-10-20", "ter 20/10", [14, 15], "Base do frontend; telas de jogadores"],
+  ["2026-10-21", "qua 21/10", [16, 17], "Clubes, compra, venda, histórico"],
+  ["2026-10-22", "qui 22/10", [18, 19, 20], "Liga no front, polimento, Docker"],
+  ["2026-10-23", "sex 23/10", [21, 22, 23], "README, ensaio limpo, entrega até 17h"]
+];
+
+/* =================== ESTADO =================== */
+var STORE_KEY = "guia-desafio-v1";
+var state = { done: {}, checks: {}, tabs: {} };
+try {
+  var saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+  if (saved && typeof saved === "object") {
+    state.done = saved.done || {};
+    state.checks = saved.checks || {};
+    state.tabs = saved.tabs || {};
+  }
+} catch (e) { /* sem armazenamento: segue sem salvar */ }
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} }
+
+/* =================== UTILITÁRIOS =================== */
+function el(tag, attrs, children) {
+  var n = document.createElement(tag);
+  if (attrs) for (var k in attrs) {
+    if (k === "html") n.innerHTML = attrs[k];
+    else if (k === "text") n.textContent = attrs[k];
+    else if (k.slice(0, 2) === "on") n.addEventListener(k.slice(2), attrs[k]);
+    else n.setAttribute(k, attrs[k]);
+  }
+  (children || []).forEach(function (c) { if (c) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+  return n;
+}
+var toastTimer;
+function toast(msg) {
+  var t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove("show"); }, 1600);
+}
+function copyText(text) {
+  var done = function () { toast("Copiado"); };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+  } catch (e) { fallback(); }
+  function fallback() {
+    try {
+      var ta = el("textarea"); ta.value = text; document.body.appendChild(ta); ta.select();
+      document.execCommand("copy"); ta.remove(); done();
+    } catch (e2) { toast("Selecione o texto e copie com Ctrl+C"); }
+  }
+}
+function codeBlock(text, lang, id) {
+  var pre = el("pre", { tabindex: "0" }); pre.textContent = text;
+  if (id) pre.id = id;
+  return el("div", { class: "code" }, [
+    lang ? el("span", { class: "lang", text: lang }) : null,
+    el("button", { class: "copy", type: "button", onclick: function () { copyText(text); } }, ["Copiar"]),
+    pre
+  ]);
+}
+function callout(kind, html) { return el("div", { class: "callout " + kind }, [el("div", { html: html })]); }
+function tableOf(t) {
+  var thead = el("thead", null, [el("tr", null, t.head.map(function (h) { return el("th", { text: h }); }))]);
+  var tbody = el("tbody", null, t.rows.map(function (r) { return el("tr", null, r.map(function (c) { return el("td", { html: c }); })); }));
+  return el("div", { class: "table-wrap" }, [el("table", null, [thead, tbody])]);
+}
+function phaseOf(n) { for (var i = 0; i < PHASES.length; i++) if (PHASES[i].blocks.indexOf(n) >= 0) return PHASES[i]; }
+function doneCount() { var c = 0; for (var i = 1; i <= 24; i++) if (state.done[i]) c++; return c; }
+
+/* =================== NAVEGAÇÃO =================== */
+function renderNav(current) {
+  var nav = document.getElementById("side");
+  nav.innerHTML = "";
+  var top = el("div", { class: "nav-group" }, [
+    navLink("inicio", "▶", "Visão geral", current === "inicio"),
+    navLink("pegadinhas", "!", "Pegadinhas do enunciado", current === "pegadinhas"),
+    navLink("anexos", "+", "Matriz e diário de IA", current === "anexos")
+  ]);
+  nav.appendChild(top);
+  PHASES.forEach(function (p) {
+    var done = p.blocks.filter(function (b) { return state.done[b]; }).length;
+    var g = el("div", { class: "nav-group" }, [el("h4", null, [el("span", { text: p.name + " · " + p.sub }), el("span", { text: done + "/" + p.blocks.length })])]);
+    p.blocks.forEach(function (b) {
+      var a = el("button", { class: "nav-item" + (state.done[b] ? " done" : ""), type: "button", onclick: function () { go("bloco-" + b); } }, [
+        el("span", { class: "num", text: String(b) }),
+        el("span", { text: B[b].title }),
+        el("span", { class: "tick", text: state.done[b] ? "✓" : "" })
+      ]);
+      if (current === "bloco-" + b) a.setAttribute("aria-current", "page");
+      g.appendChild(a);
+    });
+    nav.appendChild(g);
+  });
+  var count = doneCount();
+  document.getElementById("progress-label").textContent = count + " de 24 blocos concluídos";
+  document.getElementById("progress-bar").style.width = (count / 24 * 100) + "%";
+}
+function navLink(route, mark, label, active) {
+  var a = el("button", { class: "nav-item", type: "button", onclick: function () { go(route); } }, [
+    el("span", { class: "num", text: mark }), el("span", { text: label }), el("span", { class: "tick" })
+  ]);
+  if (active) a.setAttribute("aria-current", "page");
+  return a;
+}
+function go(route) {
+  if (location.hash !== "#" + route) location.hash = route; else render();
+  var side = document.getElementById("side");
+  side.classList.remove("open");
+  document.getElementById("menu-btn").setAttribute("aria-expanded", "false");
+}
+
+/* =================== VISÃO GERAL =================== */
+function renderHome(main) {
+  var v = el("div", { class: "view" });
+
+  var hero = el("section", { class: "hero" }, [
+    el("div", { class: "stack" }, [
+      el("span", { class: "eyebrow", text: "SENAI/PE · Cód. 237 · Desenvolvedor I Fullstack" }),
+      el("h1", { text: "Mercado de jogadores, bloco a bloco" }),
+      el("p", { class: "lead", html: "Um roteiro de 24 blocos para fazer o desafio como um projeto real. A <b>IA escreve o código</b>. Você planeja, decide, confere, testa, versiona, documenta e explica. É isso que a banca vai querer ver na entrevista." }),
+      el("div", null, [el("button", { class: "btn primary", type: "button", onclick: function () { go("bloco-" + firstPending()); } }, [doneCount() ? "Continuar no bloco " + firstPending() : "Começar pelo bloco 1"])])
+    ]),
+    el("div", { class: "split" }, [
+      el("div", { class: "you" }, [el("h3", { text: "Você faz" }), el("ul", { class: "clean", html: "<li>Entende as regras e calcula à mão</li><li>Decide arquitetura e stack</li><li>Escreve o pedido para a IA</li><li>Revisa o plano e o código</li><li>Roda e confere os testes</li><li>Commits, push e README</li><li>Explica tudo na entrevista</li>" })]),
+      el("div", { class: "ai" }, [el("h3", { text: "A IA faz" }), el("ul", { class: "clean", html: "<li>Escreve o código</li><li>Escreve os testes a partir das tabelas</li><li>Explica trechos que você não entendeu</li><li>Revisa com olhos de avaliador</li>" })])
+    ])
+  ]);
+  v.appendChild(hero);
+
+  // Datas
+  v.appendChild(el("section", { class: "stack" }, [
+    el("h2", { text: "Datas que importam" }),
+    tableOf({ head: ["Quando", "O quê"], rows: [
+      ["<b>qui 15/10, 23h59</b>", "Último prazo para enviar dúvidas (issue no GitHub ou e-mail)."],
+      ["<b>sex 16/10</b>", "Saem as respostas, como errata. A errata vale mais que o enunciado."],
+      ["<b>sex 23/10, 20h</b>", "Prazo de entrega (e-mail com link e hash). Mire em entregar até as 17h."],
+      ["<b>seg 26/10, 12h</b>", "O repositório precisa estar público: a banca copia nesse horário."]
+    ] })
+  ]));
+
+  // Nota
+  var bars = [["B1", "Roteiro da API · script automático", 30, "b"], ["B2", "Qualidade do código", 10, "b"], ["B3", "Banco de dados", 6, "b"], ["B4", "README e Git", 2, "b"], ["B5", "Diferenciais", 2, "b"],
+              ["F1", "Roteiro da interface · na tela", 30, "f"], ["F2", "Qualidade do código", 10, "f"], ["F3", "Usabilidade e feedback", 6, "f"], ["F4", "README e Git", 2, "f"], ["F5", "Diferenciais", 2, "f"]];
+  var pts = el("div", { class: "points" }, bars.map(function (r) {
+    return el("div", { class: "pt-row" }, [
+      el("b", { text: r[0] }),
+      el("div", { class: "pt-track" + (r[3] === "f" ? " front" : "") }, [el("i", { style: "width:" + (r[2] / 30 * 100) + "%" }), el("span", { text: r[1] })]),
+      el("span", { class: "val", text: String(r[2]) })
+    ]);
+  }));
+  v.appendChild(el("section", { class: "grid-2" }, [
+    el("div", { class: "panel stack" }, [
+      el("h2", { text: "Onde estão os pontos" }),
+      el("p", { class: "muted", text: "100 pontos no total. Nota final = pontos ÷ 10. Para passar: 7,0 ou mais, com pelo menos 2,5 em cada lado." }),
+      el("div", { class: "legend" }, [el("span", { class: "b", text: "Backend (50)" }), el("span", { class: "f", text: "Frontend (50)" })]),
+      pts
+    ]),
+    el("div", { class: "stack" }, [
+      el("h2", { text: "O que isso significa" }),
+      callout("tip", "<b>60% da nota são os dois roteiros (B1 e F1).</b> Regra de negócio exata vale mais que tela bonita. A fidelidade ao Figma não conta ponto."),
+      callout("warn", "<b>O script do B1 é implacável:</b> 40,00 contra 40,01 zera o item inteiro. Arredondamento, ordem e código HTTP precisam estar exatos."),
+      callout("danger", "<b>Se a aplicação não subir seguindo o README, você perde quase tudo.</b> O bloco 22 (ensaio em máquina limpa) é obrigatório."),
+      callout("tip", "<b>Entrega parcial é aceita.</b> Se faltar tempo, corte funcionalidades inteiras do fim (Liga) em vez de fazer tudo pela metade.")
+    ])
+  ]));
+
+  // Eliminação
+  v.appendChild(el("section", { class: "stack" }, [
+    el("h2", { text: "Cartão vermelho: o que elimina" }),
+    el("div", { class: "grid-3" }, [
+      callout("danger", "E-mail de entrega <b>depois do prazo</b> ou de <b>outro endereço</b> (use o e-mail onde recebe as mensagens do RH)."),
+      callout("danger", "Repositório <b>não público</b> às 12h de 26/10."),
+      callout("danger", "<b>Hash</b> ausente ou errado no e-mail (precisa ter 40 caracteres)."),
+      callout("danger", "Commit sem as pastas <code>frontend/</code> e <code>backend/</code> na raiz."),
+      callout("danger", "<b>Tecnologia fora da lista</b>: SQLite, MongoDB, Create React App…"),
+      callout("danger", "Cópia de código de outro candidato.")
+    ])
+  ]));
+
+  // Cronograma
+  var todayKey = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+  var tbody = el("tbody");
+  SCHEDULE.forEach(function (d, i) {
+    var links = el("td");
+    d[2].forEach(function (b, j) {
+      if (j) links.appendChild(document.createTextNode(" "));
+      links.appendChild(el("button", { class: "mini-copy", type: "button", onclick: function () { go("bloco-" + b); }, title: B[b].title }, [(state.done[b] ? "✓ " : "") + b]));
+    });
+    var tr = el("tr", d[0] === todayKey ? { class: "today" } : null, [
+      el("td", { class: "n", text: "Dia " + (i + 1) }), el("td", { html: "<b>" + d[1] + "</b>" + (d[0] === todayKey ? " · hoje" : "") }), links, el("td", { text: d[3] })
+    ]);
+    tbody.appendChild(tr);
+  });
+  v.appendChild(el("section", { class: "stack" }, [
+    el("h2", { text: "Cronograma de 10 dias" }),
+    el("p", { class: "muted prose", text: "O barema exige push em pelo menos 3 dias diferentes em cada pasta. Faça push todo dia. Se atrasar, não comece o frontend com o backend quebrado, mas também não deixe o frontend para o último dia: o mínimo de 2,5 vale para ele." }),
+    el("div", { class: "table-wrap" }, [el("table", null, [el("thead", null, [el("tr", null, ["Dia", "Data", "Blocos", "Meta do dia"].map(function (h) { return el("th", { text: h }); }))]), tbody])])
+  ]));
+
+  // Método
+  var method = [
+    ["Leia a regra", "Leia a parte do enunciado do bloco e anote as regras com suas palavras."],
+    ["Peça o plano", "“Antes de escrever código, liste os arquivos e o que cada um faz.”"],
+    ["Corrija o plano", "É aqui que você age como dev: “o cálculo tem que ficar no domínio”."],
+    ["Implemente com testes", "Cada tabela de exemplo do enunciado vira um teste."],
+    ["Rode e confira", "Rode os testes e chame a API. Não acredite em “pronto, funcionando”."],
+    ["Peça explicação", "Se você não consegue explicar um trecho, ele não está pronto."],
+    ["Commit e push", "Mensagem que diz o que mudou. Push todo dia."],
+    ["Anote no diário", "O que pediu, aceitou e mudou. Vira a seção de IA do README."]
+  ];
+  v.appendChild(el("section", { class: "stack" }, [
+    el("h2", { text: "O método: 8 passos em todo bloco" }),
+    el("p", { class: "muted prose", text: "O maior erro com IA é pedir “faz o projeto inteiro”. Sai um código enorme que você não entende e com bugs escondidos." }),
+    el("ol", { class: "steps" }, method.map(function (m) { return el("li", null, [el("b", { text: m[0] }), el("span", { text: m[1] })]); })),
+    el("h3", { text: "Modelo de pedido para a IA" }),
+    codeBlock(PROMPT_BASE, "prompt base"),
+    callout("tip", "Se usa o Claude Code ou o Cursor, crie na raiz do repositório um arquivo de instruções (<code>CLAUDE.md</code> ou <code>.cursorrules</code>) com a parte CONTEXTO acima. A IA lê sozinha toda vez. Declare isso no README.")
+  ]));
+
+  main.appendChild(v);
+}
+function firstPending() { for (var i = 1; i <= 24; i++) if (!state.done[i]) return i; return 24; }
+
+/* =================== BLOCO =================== */
+function renderBlock(main, n) {
+  var b = B[n], ph = phaseOf(n);
+  var v = el("div", { class: "view" });
+
+  v.appendChild(el("div", { class: "block-head" }, [
+    el("div", { class: "jersey" }, [el("small", { text: "BLOCO" }), String(n)]),
+    el("div", null, [
+      el("span", { class: "eyebrow", text: ph.name + " · " + ph.sub }),
+      el("h1", { text: b.title }),
+      el("div", { class: "meta" }, [
+        el("span", { class: "tag", html: "Quando: <strong>" + b.day + "</strong>" }),
+        el("span", { class: "tag", html: "Vale: <strong>" + b.points + "</strong>" }),
+        state.done[n] ? el("span", { class: "tag", html: "<strong>✓ Concluído</strong>" }) : null
+      ])
+    ])
+  ]));
+  v.appendChild(el("p", { class: "goal", html: "<b>Objetivo.</b> " + b.goal }));
+
+  // Abas
+  var tabs = [];
+  if (b.understand || b.table || b.code || b.flow || b.calc || b.duel) tabs.push(["entender", "Entender"]);
+  if (b.steps) tabs.push(["fazer", "Fazer"]);
+  if (b.prompt) tabs.push(["prompt", "Pedido à IA"]);
+  if (b.check) tabs.push(["conferir", "Conferir", b.check.length]);
+  if (b.commits) tabs.push(["commits", "Commits", b.commits.length]);
+  if (b.interview) tabs.push(["entrevista", "Entrevista", b.interview.length]);
+  var active = state.tabs[n] && tabs.some(function (t) { return t[0] === state.tabs[n]; }) ? state.tabs[n] : tabs[0][0];
+
+  var bar = el("div", { class: "tabs", role: "tablist" });
+  var panel = el("div", { class: "tabpanel", role: "tabpanel", id: "panel-" + n });
+  tabs.forEach(function (t) {
+    var btn = el("button", { class: "tab", role: "tab", type: "button", id: "tab-" + n + "-" + t[0], "aria-selected": String(t[0] === active), "aria-controls": "panel-" + n, onclick: function () {
+      state.tabs[n] = t[0]; save(); renderBlock(clear(main), n); main.querySelector('[aria-selected="true"]').focus();
+    } }, [t[1], t[2] ? el("span", { class: "count", text: checkedLabel(n, t) }) : null]);
+    bar.appendChild(btn);
+  });
+  v.appendChild(bar);
+
+  if (active === "entender") {
+    if (b.flow) panel.appendChild(flowDiagram());
+    if (b.understand) panel.appendChild(el("dl", { class: "concepts" }, b.understand.map(function (c) {
+      return el("div", { class: "concept" }, [el("dt", { html: c[0] }), el("dd", { html: c[1] })]);
+    })));
+    if (b.table) panel.appendChild(tableOf(b.table));
+    if (b.callouts) b.callouts.forEach(function (c) { panel.appendChild(callout(c[0], c[1])); });
+    if (b.calc) panel.appendChild(calculator());
+    if (b.duel) panel.appendChild(duelExample());
+    if (b.code) panel.appendChild(codeBlock(b.code.text, b.code.lang));
+  } else if (active === "fazer") {
+    if (!b.understand && !b.table && b.callouts) b.callouts.forEach(function (c) { panel.appendChild(callout(c[0], c[1])); });
+    panel.appendChild(el("ol", { class: "todo" }, b.steps.map(function (s) {
+      if (typeof s === "string") return el("li", null, [el("div", { html: s })]);
+      return el("li", null, [el("div", null, [el("div", { html: s.html }), codeBlock(s.code, "terminal")])]);
+    })));
+    if (!b.understand && b.table) panel.appendChild(tableOf(b.table));
+  } else if (active === "prompt") {
+    panel.appendChild(el("p", { class: "muted prose", html: "Copie, troque os trechos entre colchetes pelo texto do enunciado e envie. Revise o plano antes de deixar a IA escrever o código." }));
+    panel.appendChild(codeBlock(b.prompt, "pedido à IA"));
+  } else if (active === "conferir") {
+    panel.appendChild(el("p", { class: "muted", text: "Marque conforme for conferindo. Fica salvo neste navegador." }));
+    panel.appendChild(checklist("b" + n, b.check, function () { renderBlock(clear(main), n); }));
+  } else if (active === "commits") {
+    panel.appendChild(el("p", { class: "muted prose", text: "Um commit = uma ideia. Mensagens que dizem o que mudou, nunca só “ajuste” ou “fix”." }));
+    b.commits.forEach(function (c) {
+      panel.appendChild(el("div", { class: "commit" }, [el("code", { text: c }), el("button", { class: "mini-copy", type: "button", onclick: function () { copyText('git commit -m "' + c + '"'); } }, ["Copiar"])]));
+    });
+  } else if (active === "entrevista") {
+    panel.appendChild(el("p", { class: "muted", text: "Tente responder em voz alta antes de abrir a resposta." }));
+    panel.appendChild(el("div", { class: "qa" }, b.interview.map(function (q) {
+      return el("details", null, [el("summary", { text: q[0] }), el("p", { text: q[1] })]);
+    })));
+  }
+  v.appendChild(panel);
+
+  // Rodapé
+  var doneBtn = el("button", { class: "btn primary" + (state.done[n] ? " is-done" : ""), type: "button", onclick: function () {
+    state.done[n] = !state.done[n]; save();
+    toast(state.done[n] ? "Bloco " + n + " concluído" : "Bloco " + n + " reaberto");
+    renderNav("bloco-" + n); renderBlock(clear(main), n);
+  } }, [state.done[n] ? "Reabrir bloco" : "Marcar bloco como concluído"]);
+  v.appendChild(el("div", { class: "block-foot" }, [
+    el("button", { class: "btn", type: "button", onclick: function () { go("bloco-" + (n - 1)); } }, ["← Bloco " + (n - 1 || 1)]),
+    doneBtn,
+    el("button", { class: "btn", type: "button", onclick: function () { go("bloco-" + (n + 1)); } }, ["Bloco " + Math.min(n + 1, 24) + " →"])
+  ]));
+  if (n === 1) v.lastChild.firstChild.disabled = true; else v.lastChild.firstChild.removeAttribute("disabled");
+  if (n === 24) v.lastChild.lastChild.disabled = true; else v.lastChild.lastChild.removeAttribute("disabled");
+
+  main.appendChild(v);
+}
+function checkedLabel(n, t) {
+  if (t[0] !== "conferir") return String(t[2]);
+  var c = 0; var arr = state.checks["b" + n] || {};
+  for (var k in arr) if (arr[k]) c++;
+  return c + "/" + t[2];
+}
+function clear(node) { node.innerHTML = ""; return node; }
+
+function checklist(key, items, onChange) {
+  var store = state.checks[key] || (state.checks[key] = {});
+  return el("ul", { class: "checks" }, items.map(function (txt, i) {
+    var id = "chk-" + key + "-" + i;
+    var input = el("input", { type: "checkbox", id: id });
+    input.checked = !!store[i];
+    input.addEventListener("change", function () { store[i] = input.checked; save(); if (onChange) onChange(); });
+    return el("li", null, [el("label", { for: id }, [input, el("span", { text: txt })])]);
+  }));
+}
+
+function flowDiagram() {
+  var mk = function (t) { return el("span", { class: "chip", text: t }); };
+  var ar = function () { return el("span", { class: "arrow", text: "→" }); };
+  return el("div", { class: "panel stack" }, [
+    el("h3", { text: "O fluxo do sistema" }),
+    el("div", { class: "flow" }, [mk("Jogadores"), el("span", { class: "arrow", text: "+" }), mk("Clubes"), ar(), mk("Compra com contrato"), ar(), mk("Venda com multa e comissão"), ar(), mk("Histórico")]),
+    el("div", { class: "flow" }, [mk("Elenco formado"), ar(), mk("Escalação de 5"), ar(), mk("Partida por 6 duelos"), ar(), mk("Classificação")])
+  ]);
+}
+
+/* Calculadora de treino do valor de mercado (RN02–RN05) — só para estudo, em centavos inteiros */
+function calculator() {
+  var wrap = el("div", { class: "panel stack" });
+  wrap.appendChild(el("h3", { text: "Treine: calculadora do valor de mercado" }));
+  wrap.appendChild(el("p", { class: "muted prose", text: "Ferramenta de estudo para conferir suas contas à mão com a RN05. Escolha uma linha da tabela do enunciado e veja cada passo. Os números começam com o exemplo 9,50 · MAL_CONDICIONADO · agilidade 85 · 25 anos." }));
+  var form = el("div", { class: "grid-3" });
+  function field(id, label, input) { return el("label", { for: id, class: "stack", style: "gap:4px" }, [el("span", { class: "eyebrow", text: label }), input]); }
+  var inBase = el("input", { id: "calc-base", type: "number", step: "0.01", min: "1", value: "9.50", style: "font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)" });
+  var inCond = el("select", { id: "calc-cond", style: "font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)" }, ["APTO", "MAL_CONDICIONADO", "DOENTE"].map(function (o) { return el("option", { value: o, text: o }); }));
+  inCond.value = "MAL_CONDICIONADO";
+  var inAg = el("input", { id: "calc-ag", type: "number", min: "1", max: "100", value: "85", style: inBase.getAttribute("style") });
+  var inAge = el("input", { id: "calc-age", type: "number", min: "16", max: "45", value: "25", style: inBase.getAttribute("style") });
+  form.appendChild(field("calc-base", "Valor base", inBase));
+  form.appendChild(field("calc-cond", "Condição", inCond));
+  form.appendChild(field("calc-ag", "Agilidade", inAg));
+  form.appendChild(field("calc-age", "Idade", inAge));
+  wrap.appendChild(form);
+  var out = el("div", { class: "table-wrap" });
+  wrap.appendChild(out);
+  function fmt(n) { return n.toFixed(2).replace(".", ","); }
+  function pct(tenths) { var s = (tenths / 10).toString().replace(".", ","); return s + "%"; }
+  function update() {
+    var baseCents = Math.round(parseFloat(inBase.value || "0") * 100);
+    var cond = inCond.value, ag = parseInt(inAg.value || "0", 10), age = parseInt(inAge.value || "0", 10);
+    // tudo em décimos de ponto percentual, para evitar float
+    var disc = cond === "APTO" ? 0 : cond === "MAL_CONDICIONADO" ? 150 : 300;
+    var agNote = "sem efeito";
+    if (cond !== "APTO") {
+      if (ag >= 80) { disc = disc / 2; agNote = "80–100: desconto pela metade"; }
+      else if (ag <= 30) { disc = disc + 100; agNote = "1–30: +10 pontos"; }
+    } else agNote = "não age em APTO";
+    var ageAdj = age <= 21 ? 100 : age >= 32 ? -100 : 0;
+    var total = ageAdj - disc, capped = total < -400;
+    if (capped) total = -400;
+    // valor = base * (1000 + total) / 1000, em centavos, metade para longe do zero (valores positivos)
+    var num = baseCents * (1000 + total);
+    var cents = Math.floor((num + 500) / 1000);
+    var floor = cents < 100;
+    if (floor) cents = 100;
+    var raw = (baseCents * (1000 + total) / 100000);
+    var rows = [
+      ["1. Desconto pela condição", pct(cond === "APTO" ? 0 : cond === "MAL_CONDICIONADO" ? 150 : 300)],
+      ["2. Efeito da agilidade (" + agNote + ")", pct(disc)],
+      ["3. Ajuste por idade", (ageAdj > 0 ? "+" : "") + pct(ageAdj)],
+      ["4. Percentual total", (total > 0 ? "+" : "") + pct(total) + (capped ? " (limitado ao teto de −40%)" : "")],
+      ["5. Base × (100 + total) ÷ 100", raw.toFixed(4).replace(".", ",")],
+      ["Valor de mercado", "<b>" + fmt(cents / 100) + "</b>" + (floor ? " (subiu para o piso de 1,00)" : "")]
+    ];
+    out.innerHTML = "";
+    out.appendChild(el("table", null, [el("tbody", null, rows.map(function (r) { return el("tr", null, [el("td", { text: r[0] }), el("td", { class: "n", html: r[1] })]); }))]));
+  }
+  [inBase, inCond, inAg, inAge].forEach(function (i) { i.addEventListener("input", update); i.addEventListener("change", update); });
+  update();
+  return wrap;
+}
+
+function duelExample() {
+  var rows = [
+    ["1", "Otto Rangel (ATA, 4º do Águias)", "finalização 75", "Ivo Teles (GOL do Delta)", "72", "gol"],
+    ["2", "Lauro Neves (MEI, 3º)", "passe 82", "Hugo Vaz (ZAG, 1º)", "84", "—"],
+    ["3", "Davi Lins (LAT, 2º, MAL_COND.)", "drible 74 × 0,85 → 63", "Lino Matos (LAT, 2º)", "63", "— empate"],
+    ["4", "Ugo Falcão (ATA, 4º do Delta)", "finalização 81", "Rui Prado (GOL do Águias)", "77", "gol"],
+    ["5", "Nei Soares (MEI, 3º)", "passe 70", "Téo Brandão (ZAG, 1º)", "84", "—"],
+    ["6", "Lino Matos (LAT, 2º)", "drible 79", "Davi Lins (LAT, 2º, MAL_COND.)", "66 × 0,85 → 56", "gol"]
+  ];
+  var tbody = el("tbody", null, rows.map(function (r) {
+    return el("tr", null, r.map(function (c, i) { return el("td", { class: i === 0 || i === 4 ? "n" : null, text: c }); }));
+  }));
+  return el("div", { class: "panel stack" }, [
+    el("h3", { text: "O exemplo da RN20, duelo a duelo" }),
+    el("p", { class: "muted prose", text: "Águias FC (mandante) × Delta FC, os dois no 2-1-1. Atacam o 4º, o 3º e o 2º jogador de linha; defendem o goleiro, o 1º e o 2º. Gol só quando o ataque é maior." }),
+    el("div", { class: "table-wrap" }, [el("table", null, [el("thead", null, [el("tr", null, ["Duelo", "Atacante", "Ataque", "Defensor", "Defesa", "Resultado"].map(function (h) { return el("th", { text: h }); }))]), tbody])]),
+    el("p", { html: "<b>Placar: Águias FC 1 × 2 Delta FC</b> · <code>result: VISITANTE</code>" })
+  ]);
+}
+
+/* =================== PEGADINHAS =================== */
+function renderTraps(main) {
+  var v = el("div", { class: "view" });
+  var total = 0, checked = 0;
+  TRAPS.forEach(function (g, gi) { total += g[1].length; var s = state.checks["t" + gi] || {}; for (var k in s) if (s[k]) checked++; });
+  v.appendChild(el("div", { class: "stack" }, [
+    el("span", { class: "eyebrow", text: "Revisão final" }),
+    el("h1", { text: "Pegadinhas do enunciado" }),
+    el("p", { class: "lead prose", text: "Use como revisão antes da entrega. Marque cada item depois de conferir no seu projeto. " + checked + " de " + total + " conferidos." })
+  ]));
+  var grid = el("div", { class: "grid-2" });
+  TRAPS.forEach(function (g, gi) {
+    grid.appendChild(el("div", { class: "panel checklist-group" }, [el("h3", { text: g[0] }), checklist("t" + gi, g[1], function () { renderTraps(clear(main)); })]));
+  });
+  v.appendChild(grid);
+  main.appendChild(v);
+}
+
+/* =================== ANEXOS =================== */
+function renderAnnex(main) {
+  var v = el("div", { class: "view" });
+  v.appendChild(el("div", { class: "stack" }, [
+    el("span", { class: "eyebrow", text: "Modelos para copiar" }),
+    el("h1", { text: "Matriz e diário de IA" })
+  ]));
+  v.appendChild(el("section", { class: "stack" }, [
+    el("h2", { text: "Matriz de rastreabilidade" }),
+    el("p", { class: "muted prose", text: "Uma linha por regra. Preencha conforme avança. Na entrevista, isso mostra organização." }),
+    el("p", null, [el("a", { class: "btn primary", href: "https://claude.ai/code/artifact/b5851511-70fe-404d-87d8-27b2f8a9b8eb", target: "_blank", rel: "noopener", style: "display:inline-block;text-decoration:none" }, ["Abrir a matriz completa (30 regras) →"])]),
+    tableOf({ head: ["Regra", "Resumo", "Onde no código", "Teste", "Item do barema"], rows: [
+      ["V1", "Corpo deve ser objeto JSON", "<code>common/filters/…</code>", "e2e/validation", "B01 · B02"],
+      ["V4", "Normalização de nomes", "<code>common/text/normalize-name.ts</code>", "normalize-name.spec", "B01"],
+      ["RN05", "Valor de mercado", "<code>domain/market-value.ts</code>", "10 casos", "B05"],
+      ["RN06", "Overall e valor base", "<code>domain/overall.ts</code>, <code>base-value.ts</code>", "5 + 9 casos", "B06"],
+      ["RN13", "Taxa e limite de caixa", "<code>domain/purchase.ts</code>", "5 casos", "B10"],
+      ["RN15", "Multa", "<code>domain/sale.ts</code>", "7 casos", "B14"],
+      ["RN16", "Comissão e crédito", "<code>domain/sale.ts</code>", "6 + 5 casos", "B15"],
+      ["RN20", "Partida", "<code>domain/match-engine.ts</code>", "Águias × Delta", "B21"]
+    ] })
+  ]));
+  v.appendChild(el("section", { class: "stack" }, [
+    el("h2", { text: "Diário de uso de IA" }),
+    el("p", { class: "muted prose", text: "Atualize a cada bloco, num arquivo fora do repositório. No fim, ele vira a seção “Uso de inteligência artificial” do README." }),
+    tableOf({ head: ["Data", "Bloco", "Ferramenta", "O que pedi", "O que aceitei", "O que alterei ou descartei e por quê"], rows: [
+      ["15/10", "6 · Domínio", "Claude Code", "Funções de cálculo e testes com as tabelas", "Estrutura das funções e os testes", "A comissão arredondava cada faixa separadamente; pedi para arredondar só no final (RN16)"]
+    ] }),
+    codeBlock("| Data | Bloco | Ferramenta | O que pedi | O que aceitei | O que alterei ou descartei e por quê |\n| --- | --- | --- | --- | --- | --- |\n|  |  |  |  |  |  |", "modelo em Markdown")
+  ]));
+  v.appendChild(callout("tip", "<b>Lembrete:</b> você não precisa saber escrever cada linha de memória. Precisa saber o que cada parte faz, por que está ali e como você verificou que está certa."));
+  main.appendChild(v);
+}
+
+/* =================== ROTEAMENTO =================== */
+function render() {
+  var route = (location.hash || "#inicio").slice(1);
+  var main = clear(document.getElementById("main"));
+  var m = /^bloco-(\d+)$/.exec(route);
+  if (m && B[+m[1]]) { renderNav(route); renderBlock(main, +m[1]); }
+  else if (route === "pegadinhas") { renderNav(route); renderTraps(main); }
+  else if (route === "anexos") { renderNav(route); renderAnnex(main); }
+  else { renderNav("inicio"); renderHome(main); }
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", render);
+
+document.getElementById("menu-btn").addEventListener("click", function () {
+  var side = document.getElementById("side");
+  var open = side.classList.toggle("open");
+  this.setAttribute("aria-expanded", String(open));
+});
+
+/* =================== PLACAR =================== */
+var DEADLINE = Date.parse("2026-10-23T20:00:00-03:00");
+function tick() {
+  var diff = Math.max(0, DEADLINE - Date.now());
+  var d = Math.floor(diff / 86400000), h = Math.floor(diff % 86400000 / 3600000), mi = Math.floor(diff % 3600000 / 60000);
+  document.getElementById("cd-d").textContent = String(d).padStart(2, "0");
+  document.getElementById("cd-h").textContent = String(h).padStart(2, "0");
+  document.getElementById("cd-m").textContent = String(mi).padStart(2, "0");
+}
+tick(); setInterval(tick, 30000);
+
+render();
+})();
+</script>

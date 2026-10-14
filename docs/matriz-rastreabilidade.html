@@ -1,0 +1,388 @@
+<title>Matriz de Rastreabilidade</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: súmula de jogo — placar de progresso no topo, filtros em faixa, e a tabela de regras como a súmula oficial (vira cartões no celular). */
+:root {
+  --paper: #F4F7F3;
+  --card: #FFFFFF;
+  --ink: #142019;
+  --muted: #56685D;
+  --line: #D6E0D8;
+  --pitch: #1D6A3A;
+  --pitch-soft: #E2EFE5;
+  --card-yellow: #F1C232;
+  --yellow-soft: #FFF4D1;
+  --card-red: #C2362C;
+  --code-bg: #EEF3EF;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #0E1611; --card: #152019; --ink: #E4ECE6; --muted: #93A79A; --line: #26372C;
+    --pitch: #55C27D; --pitch-soft: #1B3324; --card-yellow: #F2C53D; --yellow-soft: #33290C;
+    --card-red: #F06A5F; --code-bg: #0B120E;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0E1611; --card: #152019; --ink: #E4ECE6; --muted: #93A79A; --line: #26372C;
+  --pitch: #55C27D; --pitch-soft: #1B3324; --card-yellow: #F2C53D; --yellow-soft: #33290C;
+  --card-red: #F06A5F; --code-bg: #0B120E;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--paper); }
+body { color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
+h1, h2 { font-family: var(--display); text-transform: uppercase; line-height: 1.05; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 800; }
+h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: .02em; }
+p { margin: 0; }
+code { font-family: var(--mono); font-size: .85em; background: var(--code-bg); padding: .1em .35em; border-radius: 4px; overflow-wrap: anywhere; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--card-yellow); outline-offset: 2px; }
+.eyebrow { font-family: var(--display); font-weight: 700; font-size: .9rem; letter-spacing: .14em; text-transform: uppercase; color: var(--pitch); }
+.muted { color: var(--muted); }
+
+.top {
+  background: var(--pitch); color: #fff;
+  padding-block: 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.top-inner { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: space-between; }
+.brand { font-family: var(--display); font-weight: 800; font-size: 1.3rem; text-transform: uppercase; letter-spacing: .04em; display: flex; gap: 10px; align-items: center; }
+.top a { color: #fff; font-family: var(--display); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: .95rem; text-decoration: none; border: 1px solid rgba(255,255,255,.4); border-radius: 8px; padding: 5px 12px; }
+.top a:hover { background: rgba(255,255,255,.12); }
+
+.wrap {
+  max-width: 1400px; margin: 0 auto;
+  padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 24px;
+}
+.intro { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 24px; align-items: end; }
+.intro p.lead { font-size: 1.1rem; max-width: 62ch; margin-top: 10px; }
+
+/* Placar */
+.score { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.score-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.score-cell { text-align: center; padding: 6px 4px; border-radius: 8px; background: var(--paper); }
+.score-cell b { display: block; font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 1.7rem; line-height: 1.1; }
+.score-cell span { font-family: var(--display); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.score-cell.ok b { color: var(--pitch); }
+.score-cell.mid b { color: var(--ink); }
+.stack-bar { display: flex; height: 12px; border-radius: 99px; overflow: hidden; background: var(--paper); border: 1px solid var(--line); }
+.stack-bar i { display: block; height: 100%; transition: width .4s ease; }
+.stack-bar .s-ok { background: var(--pitch); }
+.stack-bar .s-mid { background: var(--card-yellow); }
+
+/* Filtros */
+.filters { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chips .lbl { font-family: var(--display); font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+.chip { border: 1px solid var(--line); background: var(--paper); border-radius: 99px; padding: 3px 12px; font-size: .9rem; }
+.chip[aria-pressed="true"] { background: var(--pitch); border-color: var(--pitch); color: #fff; }
+.search { flex: 1 1 200px; min-width: 0; padding: 7px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 2px solid var(--pitch); background: var(--card); color: var(--pitch); border-radius: 8px; padding: 6px 14px; font-family: var(--display); font-weight: 700; font-size: .95rem; letter-spacing: .08em; text-transform: uppercase; }
+.btn.primary { background: var(--pitch); color: #fff; }
+.btn.ghost { border-color: var(--line); color: var(--muted); }
+
+/* Tabela / súmula */
+.section-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+table { border-collapse: collapse; width: 100%; font-size: .93rem; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--display); text-transform: uppercase; letter-spacing: .08em; font-size: .8rem; color: var(--muted); font-weight: 700; background: var(--paper); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tr.st-ok td:first-child { box-shadow: inset 4px 0 0 var(--pitch); }
+tr.st-mid td:first-child { box-shadow: inset 4px 0 0 var(--card-yellow); }
+.rule { font-family: var(--display); font-weight: 800; font-size: 1.15rem; letter-spacing: .03em; white-space: nowrap; }
+.err { font-family: var(--mono); font-size: .8rem; white-space: nowrap; }
+.pills { display: flex; flex-wrap: wrap; gap: 4px; }
+.pill { font-family: var(--mono); font-size: .76rem; padding: 1px 6px; border-radius: 4px; background: var(--pitch-soft); white-space: nowrap; }
+.pill.block { background: var(--yellow-soft); }
+td.desc { min-width: 260px; max-width: 420px; }
+.field { width: 100%; min-width: 170px; padding: 5px 8px; border: 1px dashed var(--line); border-radius: 6px; background: transparent; font-family: var(--mono); font-size: .8rem; }
+.field:hover, .field:focus { border-style: solid; border-color: var(--pitch); background: var(--paper); }
+.field::placeholder { color: var(--muted); opacity: .7; }
+.chk { width: 18px; height: 18px; accent-color: var(--pitch); }
+.status {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--paper);
+  border-radius: 99px; padding: 3px 10px 3px 6px; font-size: .85rem; white-space: nowrap;
+}
+.status .dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--muted); }
+.status.mid .dot { background: var(--card-yellow); border-color: var(--card-yellow); }
+.status.ok { border-color: var(--pitch); }
+.status.ok .dot { background: var(--pitch); border-color: var(--pitch); }
+.empty { padding: 24px; text-align: center; color: var(--muted); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: .9rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+.toast { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--paper); padding: 8px 18px; border-radius: 99px; font-weight: 600; opacity: 0; pointer-events: none; transition: .25s; z-index: 50; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.confirm { display: none; align-items: center; gap: 8px; font-size: .9rem; }
+.confirm.show { display: inline-flex; }
+
+@media (max-width: 900px) {
+  .intro { grid-template-columns: 1fr; }
+}
+/* Celular: cada linha vira um cartão */
+@media (max-width: 720px) {
+  .table-wrap { border: 0; background: none; overflow: visible; }
+  table, tbody, tr, td { display: block; width: 100%; }
+  thead { display: none; }
+  tr { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 12px; padding: 10px 12px; }
+  tr.st-ok { border-left: 5px solid var(--pitch); }
+  tr.st-mid { border-left: 5px solid var(--card-yellow); }
+  tr.st-ok td:first-child, tr.st-mid td:first-child { box-shadow: none; }
+  td { border: 0; padding: 5px 0; display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; align-items: center; }
+  td::before { content: attr(data-label); font-family: var(--display); font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  td.desc { min-width: 0; max-width: none; }
+  .field { min-width: 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="2" width="20" height="22" rx="2" fill="none" stroke="#fff" stroke-width="2"/><line x1="7" y1="8" x2="19" y2="8" stroke="#fff" stroke-width="2"/><line x1="7" y1="13" x2="19" y2="13" stroke="#fff" stroke-width="2"/><line x1="7" y1="18" x2="14" y2="18" stroke="#fff" stroke-width="2"/></svg>
+      <span>Matriz de Rastreabilidade</span>
+    </div>
+    <a href="https://claude.ai/code/artifact/a9e23023-a2e4-479c-9252-446bf8a78f20" target="_blank" rel="noopener">← Guia do Desafio</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="intro">
+    <div>
+      <span class="eyebrow">SENAI/PE · Cód. 237 · Súmula das regras</span>
+      <h1>Regra → código → teste</h1>
+      <p class="lead">As 30 regras do enunciado numa tabela só. Ao terminar cada bloco, anote onde a regra está no código, qual teste a garante e se você conferiu à mão. Clique no status para avançar de <b>não começou</b> para <b>falta testar</b> e <b>pronto</b>.</p>
+    </div>
+    <div class="score" aria-live="polite">
+      <div class="score-row">
+        <div class="score-cell"><b id="s-total">30</b><span>Regras</span></div>
+        <div class="score-cell ok"><b id="s-ok">0</b><span>Prontas</span></div>
+        <div class="score-cell mid"><b id="s-mid">0</b><span>Falta testar</span></div>
+        <div class="score-cell"><b id="s-todo">30</b><span>A fazer</span></div>
+      </div>
+      <div class="stack-bar" aria-hidden="true"><i class="s-ok" id="bar-ok"></i><i class="s-mid" id="bar-mid"></i></div>
+    </div>
+  </section>
+
+  <section class="filters" aria-label="Filtros">
+    <div class="chips" id="f-group"><span class="lbl">Grupo</span></div>
+    <div class="chips" id="f-status"><span class="lbl">Status</span></div>
+    <input class="search" id="f-search" type="search" placeholder="Buscar: multa, CSV, 409, B14, bloco 10…" aria-label="Buscar regra">
+    <div class="actions">
+      <button class="btn primary" id="btn-copy" type="button">Copiar como Markdown</button>
+      <button class="btn ghost" id="btn-reset" type="button">Limpar anotações</button>
+      <span class="confirm" id="confirm-reset">Apagar tudo? <button class="btn" id="yes-reset" type="button">Sim, apagar</button><button class="btn ghost" id="no-reset" type="button">Cancelar</button></span>
+    </div>
+  </section>
+
+  <div class="legend">
+    <span><span class="status"><span class="dot"></span>Não começou</span></span>
+    <span><span class="status mid"><span class="dot"></span>Implementado, falta testar</span></span>
+    <span><span class="status ok"><span class="dot"></span>Implementado e testado</span></span>
+    <span>As anotações ficam salvas neste navegador. Use “Copiar como Markdown” para levar para o arquivo .md.</span>
+  </div>
+
+  <section class="stack" style="display:flex;flex-direction:column;gap:12px">
+    <div class="section-head"><h2 id="list-title">Todas as regras</h2><span class="muted" id="list-count"></span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Regra</th><th>O que diz</th><th>Erro</th><th>Bloco</th><th>Barema</th><th>Onde no código</th><th>Teste automatizado</th><th>À mão</th><th>Status</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+"use strict";
+
+var RULES = [
+  ["V1", "V", "Corpo tem que ser um objeto JSON; JSON inválido, [], \"x\" ou 10 são recusados; corpo em GET, DELETE e venda é ignorado", "400", "5", "B01, B02"],
+  ["V2", "V", "Cada campo no tipo certo: \"15\" (texto) é recusado; inteiro não aceita 50.5, mas aceita 50.0", "400", "5, 7", "B01"],
+  ["V3", "V", "Valores em moedas não são enviados; se vierem no corpo (base_value, cash), são ignorados", "—", "7", "B03"],
+  ["V4", "V", "Nomes e search: tira espaços das pontas, junta espaços repetidos; tab e quebra de linha são recusados; vazio conta como ausente", "400", "5", "B01, B07"],
+  ["V5", "V", "Valores de lista exatamente como escritos (ATA, true); \"ata\" e \"TRUE\" são recusados", "400", "5, 7", "B01"],
+  ["V6", "V", "Campo obrigatório ausente ou null é recusado", "400", "7", "B01"],
+  ["V7", "V", "Campos calculados ou controlados pelo sistema e campos desconhecidos são ignorados, sem erro", "—", "5, 7", "B03"],
+  ["V8", "V", "Recurso inexistente → 404; id malformado na URL (abc, 0, 01, > 2147483647) → 404; jogador excluído conta como inexistente", "404", "5", "B02, B08, B11, B16, B20, B21"],
+  ["V9", "V", "Dado inválido → 400; não existe → 404; regra de negócio → 409", "400/404/409", "5", "B02"],
+  ["RN01", "RN", "Datas de entrada em AAAA-MM-DDTHH:MM-03:00; data inexistente é recusada; saída em AAAA-MM-DDTHH:MM:SS-03:00", "400", "5, 10", "B12"],
+  ["RN02", "RN", "Desconto por condição: APTO 0%, MAL_CONDICIONADO 15%, DOENTE 30%", "—", "6", "B05"],
+  ["RN03", "RN", "Agilidade mexe só no desconto e só fora de APTO: 80–100 → metade; 1–30 → +10 pontos", "—", "6", "B05"],
+  ["RN04", "RN", "Idade: até 21 → +10%; 22–31 → 0%; 32+ → −10%", "—", "6", "B05"],
+  ["RN05", "RN", "Valor de mercado = base × (100 + total) ÷ 100, com teto de −40% e piso de 1,00", "—", "6", "B05, B13"],
+  ["RN06", "RN", "Overall pelos pesos da posição (calculado a cada consulta); valor base progressivo, calculado uma vez no cadastro", "—", "6, 7", "B06"],
+  ["RN07", "RN", "Listagem paginada com busca, filtros e ordenação; filtros de valor usam o valor de mercado", "400/404", "8", "B07, B17"],
+  ["RN08", "RN", "PUT muda só nome, posição, agilidade e idade; quem tem clube não muda de posição; idade não diminui", "409", "7", "B03, B04, B17"],
+  ["RN09", "RN", "Exclusão lógica (excluido_em), só de jogador livre; depois, 404 em tudo", "204/409", "7", "B08, B11, B16, B17, B18"],
+  ["RN10", "RN", "Clube nasce com 300,00; nome único (sem diferenciar maiúsculas, com acentos); sigla única; máximo de 20 clubes", "409", "4, 9", "B09, B3"],
+  ["RN11", "RN", "Elenco ordenado (GOL→ATA, nome, id); contrato de cada jogador; valor do elenco e patrimônio calculados", "400", "9", "B13, B17"],
+  ["RN12", "RN", "Só compra jogador livre, pelo valor de mercado; clube não recompra quem vendeu; compra grava tudo junto", "409", "10", "B10, B11, B16"],
+  ["RN13", "RN", "Taxa de 5% só se o valor for > 30,00; custo total ≤ 50% do caixa, sem arredondar", "409", "6, 10", "B10, B13"],
+  ["RN14", "RN", "No máximo 12 jogadores por clube", "409", "10", "B11"],
+  ["RN15", "RN", "Dias restantes arredondados para cima; multa de 0/5/10/20% com teto de 10,00; contrato RESCINDIDO ou ENCERRADO", "—", "6, 10", "B13, B14"],
+  ["RN16", "RN", "Lucro; comissão progressiva (10% até 10,00 + 20% acima); crédito = valor − multa − comissão; jogador livre não pode ser vendido", "409", "6, 10", "B15, B16"],
+  ["RN17", "RN", "Histórico com valores do momento, ordem decrescente, filtros e summary; 300 + Σ cash_change = caixa", "400/404", "11", "B18"],
+  ["RN18", "RN", "CSV com ;, vírgula decimal, UTF-8 sem BOM, LF, aspas duplicadas; mesmos filtros do histórico", "400/404", "11", "B19"],
+  ["RN19", "RN", "Escalação de 5 (1 GOL + 4 de linha) numa formação; venda ou DOENTE tiram o titular", "400/404/409", "12", "B20"],
+  ["RN20", "RN", "Partida por 6 duelos, sem sorteio; MAL_CONDICIONADO × 0,85; gol se ataque > defesa; grava tudo", "400/404/409", "6, 12", "B21"],
+  ["RN21", "RN", "Histórico de partidas e classificação (pontos → saldo → gols → nome), calculada a cada consulta", "400/404", "12", "B22"]
+];
+var STATUS = [
+  { key: "todo", label: "Não começou", cls: "", md: "⬜" },
+  { key: "mid", label: "Falta testar", cls: "mid", md: "🟨" },
+  { key: "ok", label: "Pronto", cls: "ok", md: "✅" }
+];
+
+/* Exemplo de preenchimento, só na primeira visita, marcado como exemplo */
+var EXAMPLE = { RN05: { code: "backend/src/domain/market-value.ts (exemplo)", test: "market-value.spec.ts — 10 casos (exemplo)", hand: false, status: 0 } };
+
+var KEY = "matriz-rastreabilidade-v1";
+var data = null;
+try { data = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { data = null; }
+if (!data || typeof data !== "object") data = JSON.parse(JSON.stringify(EXAMPLE));
+function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
+function entry(id) { return data[id] || (data[id] = { code: "", test: "", hand: false, status: 0 }); }
+
+var filter = { group: "all", status: "all", q: "" };
+
+function el(tag, attrs, kids) {
+  var n = document.createElement(tag);
+  if (attrs) for (var k in attrs) {
+    if (k === "text") n.textContent = attrs[k];
+    else if (k === "html") n.innerHTML = attrs[k];
+    else if (k.slice(0, 2) === "on") n.addEventListener(k.slice(2), attrs[k]);
+    else n.setAttribute(k, attrs[k]);
+  }
+  (kids || []).forEach(function (c) { if (c) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+  return n;
+}
+var tt;
+function toast(m) { var t = document.getElementById("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(tt); tt = setTimeout(function () { t.classList.remove("show"); }, 1600); }
+function norm(s) { return s.normalize("NFD").replace(/\p{Mn}/gu, "").toLowerCase(); }
+
+function chips(containerId, opts, field) {
+  var box = document.getElementById(containerId);
+  opts.forEach(function (o) {
+    var b = el("button", { class: "chip", type: "button", "aria-pressed": String(filter[field] === o[0]), onclick: function () {
+      filter[field] = o[0];
+      box.querySelectorAll(".chip").forEach(function (c) { c.setAttribute("aria-pressed", "false"); });
+      b.setAttribute("aria-pressed", "true");
+      renderRows();
+    } }, [o[1]]);
+    box.appendChild(b);
+  });
+}
+chips("f-group", [["all", "Todas"], ["V", "Validação V1–V9"], ["RN", "Negócio RN01–RN21"]], "group");
+chips("f-status", [["all", "Todos"], ["0", "Não começou"], ["1", "Falta testar"], ["2", "Pronto"]], "status");
+document.getElementById("f-search").addEventListener("input", function () { filter.q = this.value; renderRows(); });
+
+function matches(r) {
+  var e = entry(r[0]);
+  if (filter.group !== "all" && r[1] !== filter.group) return false;
+  if (filter.status !== "all" && String(e.status) !== filter.status) return false;
+  if (filter.q.trim()) {
+    var q = norm(filter.q.trim()).replace(/^bloco\s*/, "");
+    var hay = norm([r[0], r[2], r[3], "bloco " + r[4], r[4], r[5], e.code, e.test].join(" "));
+    if (hay.indexOf(q) < 0 && hay.indexOf(norm(filter.q.trim())) < 0) return false;
+  }
+  return true;
+}
+
+function renderRows() {
+  var tbody = document.getElementById("rows");
+  tbody.innerHTML = "";
+  var shown = RULES.filter(matches);
+  shown.forEach(function (r) {
+    var id = r[0], e = entry(id), st = STATUS[e.status];
+    var code = el("input", { class: "field", id: "code-" + id, type: "text", placeholder: "ex.: src/domain/…", value: e.code });
+    code.addEventListener("input", function () { e.code = code.value; save(); });
+    var test = el("input", { class: "field", id: "test-" + id, type: "text", placeholder: "ex.: arquivo.spec.ts", value: e.test });
+    test.addEventListener("input", function () { e.test = test.value; save(); });
+    var hand = el("input", { class: "chk", id: "hand-" + id, type: "checkbox", "aria-label": "Conferido à mão: " + id });
+    hand.checked = !!e.hand;
+    hand.addEventListener("change", function () { e.hand = hand.checked; save(); });
+    var stBtn = el("button", { class: "status " + st.cls, type: "button", title: "Clique para mudar o status", "aria-label": "Status de " + id + ": " + st.label + ". Clique para avançar.", onclick: function () {
+      e.status = (e.status + 1) % 3; save(); renderRows(); renderScore();
+      var again = document.querySelector('[data-status="' + id + '"]'); if (again) again.focus();
+      toast(id + ": " + STATUS[e.status].label);
+    } }, [el("span", { class: "dot" }), st.label]);
+    stBtn.setAttribute("data-status", id);
+    var tr = el("tr", { class: e.status === 2 ? "st-ok" : e.status === 1 ? "st-mid" : "" }, [
+      el("td", { "data-label": "Regra" }, [el("span", { class: "rule", text: id })]),
+      el("td", { class: "desc", "data-label": "O que diz", text: r[2] }),
+      el("td", { "data-label": "Erro" }, [el("span", { class: "err", text: r[3] })]),
+      el("td", { "data-label": "Bloco" }, [el("div", { class: "pills" }, r[4].split(", ").map(function (b) { return el("span", { class: "pill block", text: b }); }))]),
+      el("td", { "data-label": "Barema" }, [el("div", { class: "pills" }, r[5].split(", ").map(function (b) { return el("span", { class: "pill", text: b }); }))]),
+      el("td", { "data-label": "Código" }, [code]),
+      el("td", { "data-label": "Teste" }, [test]),
+      el("td", { "data-label": "À mão" }, [hand]),
+      el("td", { "data-label": "Status" }, [stBtn])
+    ]);
+    tbody.appendChild(tr);
+  });
+  if (!shown.length) tbody.appendChild(el("tr", null, [el("td", { class: "empty", colspan: "9", text: "Nenhuma regra com esses filtros. Limpe a busca ou escolha “Todas”." })]));
+  var titles = { all: "Todas as regras", V: "Validação dos dados", RN: "Regras de negócio" };
+  document.getElementById("list-title").textContent = titles[filter.group];
+  document.getElementById("list-count").textContent = shown.length + " de " + RULES.length;
+}
+
+function renderScore() {
+  var ok = 0, mid = 0;
+  RULES.forEach(function (r) { var s = entry(r[0]).status; if (s === 2) ok++; else if (s === 1) mid++; });
+  document.getElementById("s-ok").textContent = ok;
+  document.getElementById("s-mid").textContent = mid;
+  document.getElementById("s-todo").textContent = RULES.length - ok - mid;
+  document.getElementById("bar-ok").style.width = (ok / RULES.length * 100) + "%";
+  document.getElementById("bar-mid").style.width = (mid / RULES.length * 100) + "%";
+}
+
+function toMarkdown() {
+  var esc = function (s) { return String(s || "").replace(/\|/g, "\\|"); };
+  var lines = ["| Regra | O que diz | Erro | Bloco | Barema | Onde no código | Teste automatizado | Conferido à mão | Status |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"];
+  RULES.forEach(function (r) {
+    var e = entry(r[0]);
+    lines.push("| " + [r[0], esc(r[2]), r[3], r[4], r[5], e.code ? "`" + esc(e.code) + "`" : "", esc(e.test), e.hand ? "☑" : "☐", STATUS[e.status].md].join(" | ") + " |");
+  });
+  return lines.join("\n");
+}
+document.getElementById("btn-copy").addEventListener("click", function () {
+  var text = toMarkdown();
+  var ok = function () { toast("Tabela copiada. Cole no arquivo .md"); };
+  var fallback = function () {
+    try { var ta = el("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); ok(); }
+    catch (e) { toast("Não consegui copiar automaticamente"); }
+  };
+  try { navigator.clipboard.writeText(text).then(ok, fallback); } catch (e) { fallback(); }
+});
+var confirmBox = document.getElementById("confirm-reset");
+document.getElementById("btn-reset").addEventListener("click", function () { confirmBox.classList.add("show"); this.hidden = true; });
+document.getElementById("no-reset").addEventListener("click", function () { confirmBox.classList.remove("show"); document.getElementById("btn-reset").hidden = false; });
+document.getElementById("yes-reset").addEventListener("click", function () {
+  data = {}; save(); confirmBox.classList.remove("show"); document.getElementById("btn-reset").hidden = false;
+  renderRows(); renderScore(); toast("Anotações apagadas");
+});
+
+renderRows();
+renderScore();
+})();
+</script>
