@@ -17,6 +17,8 @@ Errata publicada a partir de 16/10/2026 prevalece sobre o enunciado.
   uma delas, republique no mesmo link (passando a `url`):
   - guia: https://claude.ai/code/artifact/a9e23023-a2e4-479c-9252-446bf8a78f20
   - matriz: https://claude.ai/code/artifact/b5851511-70fe-404d-87d8-27b2f8a9b8eb
+- A Thainá alterna entre o PC do trabalho (WSL) e o de casa (Ubuntu): rotina diária e preparação de um PC novo
+  em `docs/ROTINA.md`. Ao mudar o ambiente (portas, comandos de início), atualize esse arquivo.
 - Mockup no Figma (referência de fluxo, não de pixel): https://www.figma.com/design/oevjrS0eaqL3VHSvKYB8GS/Passe?node-id=2-2
 
 ## Stack (fechada; tecnologia fora da lista elimina)
