@@ -1311,7 +1311,7 @@ Copie para uma planilha. Preencha conforme avança. Na entrevista, isso mostra o
 
 # Anexo C — Diário de uso de IA (modelo)
 
-Mantenha num arquivo fora do repositório e atualize a cada bloco. No fim, ele vira a seção "Uso de inteligência artificial" do README.
+Mantenha em docs/DIARIO-IA.md e atualize a cada bloco. No fim, ele vira a seção "Uso de inteligência artificial" do README.
 
 | Data | Bloco | Ferramenta | O que pedi | O que aceitei | O que alterei ou descartei e por quê |
 | --- | --- | --- | --- | --- | --- |
