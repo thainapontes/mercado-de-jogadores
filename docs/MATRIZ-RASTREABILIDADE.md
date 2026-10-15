@@ -36,7 +36,7 @@ Uma linha por regra do enunciado. Vá preenchendo as colunas **Onde no código**
 | RN07 | Listagem paginada com busca, filtros e ordenação; filtros de valor usam o valor de mercado | 400/404 | 8 | B07, B17 | | | ☐ | ⬜ |
 | RN08 | `PUT` muda só nome, posição, agilidade e idade; quem tem clube não muda de posição; idade não diminui | 409 | 7 | B03, B04, B17 | | | ☐ | ⬜ |
 | RN09 | Exclusão lógica (`excluido_em`), só de jogador livre; depois, 404 em tudo | 204/409 | 7 | B08, B11, B16, B17, B18 | | | ☐ | ⬜ |
-| RN10 | Clube nasce com 300,00; nome único (sem diferenciar maiúsculas, com acentos); sigla única; máximo de 20 clubes | 409 | 4, 9 | B09 · B3 | | | ☐ | ⬜ |
+| RN10 | Clube nasce com 300,00; nome único (sem diferenciar maiúsculas, com acentos); sigla única; máximo de 20 clubes | 409 | 4, 9 | B09 · B3 | Banco (Bloco 4): `caixa` padrão 300.00, `clubes_sigla_key` e `clubes_nome_lower_key` (`lower(nome)`) em `backend/prisma/migrations/20261015170152_init/migration.sql`. API: Bloco 9 | Inserções diretas no `psql` (Bloco 4); falta o teste da API | ☑ | 🟨 |
 | RN11 | Elenco ordenado (GOL→ATA, nome, id); contrato de cada jogador; valor do elenco e patrimônio calculados | 400 | 9 | B13, B17 | | | ☐ | ⬜ |
 | RN12 | Só compra jogador livre, pelo valor de mercado; clube não recompra quem vendeu; compra grava tudo junto | 409 | 10 | B10, B11, B16 | | | ☐ | ⬜ |
 | RN13 | Taxa de 5% só se o valor for > 30,00; custo total ≤ 50% do caixa, sem arredondar | 409 | 6, 10 | B10, B13 | | | ☐ | ⬜ |
