@@ -17,7 +17,9 @@ claude                    # abre o Claude Code; diga em que bloco paramos
 ```
 
 - Se o `git pull` trouxe mudança no `package-lock.json`, rode `npm ci` dentro de `backend/` ou `frontend/`.
-- A partir do Bloco 4, suba o banco: `docker compose up -d db` (na raiz do projeto).
+- Suba o banco: `docker compose up -d db` (na raiz do projeto).
+- Se o `git pull` trouxe uma pasta nova em `backend/prisma/migrations/`, aplique no seu banco: `npx prisma migrate dev`
+  (na pasta `backend/`).
 - Para revisar o código no editor, em outro terminal: `code .`
 
 ### Ao parar
@@ -90,6 +92,13 @@ cp .env.example .env
 npm ci
 ```
 
+O `npm ci` do backend também gera o cliente do Prisma (script `postinstall`). Depois, com o banco no ar
+(`docker compose up -d db`, na raiz), crie as tabelas, ainda dentro de `backend/`:
+
+```bash
+npx prisma migrate deploy
+```
+
 Os dados do banco também não viajam: cada PC tem o seu banco, e as migrations criam as tabelas do zero.
 
 ### 6. VS Code e extensões
@@ -119,3 +128,9 @@ O `CLAUDE.md` vem junto com o repositório, então o contexto do projeto já est
   frontend. Antes de rodar o desafio, pare os containers dele (`docker compose stop`, na pasta daquele projeto).
 - **`node -v` mostra outra versão:** rode `nvm use` dentro da pasta do projeto.
 - **`docker` pede `sudo` no PC de casa:** faltou sair e entrar de novo na sessão depois do passo 3.
+- **`npm` do Windows dentro do WSL (PC do trabalho):** se `which npm` mostrar `/mnt/c/Program Files/nodejs/npm`,
+  o WSL está usando o npm do Windows, e os comandos falham ("caminhos UNC não são suportados"). Em 15/10 instalamos
+  o nvm no WSL (`~/.nvm`), com o Node 22 como padrão; num terminal novo, `which npm` precisa mostrar `~/.nvm/...`.
+  Se não mostrar, rode `nvm use`.
+- **`prisma migrate reset` recusado quando a IA pede:** o Prisma 7 exige a confirmação de uma pessoa. Rode você mesma
+  (na pasta `backend/`): `npx prisma migrate reset --force`.

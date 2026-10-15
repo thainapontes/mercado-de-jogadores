@@ -481,7 +481,7 @@ B[4] = {
   ],
   callouts: [
     ["danger", "<b>As 3 armadilhas do B3.</b> (1) Nome do clube único sem diferenciar maiúsculas, mas diferenciando acentos: índice UNIQUE em <code>lower(nome)</code>, escrito em SQL na migration (o enunciado permite). (2) <code>escalacoes</code> com chave primária composta (<code>clube_id</code>, <code>jogador_id</code>) <b>e</b> UNIQUE em <code>jogador_id</code>. (3) Nenhuma coluna de valor calculado."],
-    ["warn", "O <code>prisma migrate reset</code> roda o <i>seed</i> sozinho se existir. O banco precisa começar vazio: use <code>--skip-seed</code>."]
+    ["warn", "Prisma <b>7.10.0</b> com versão fixa: o <code>npm install prisma</code> sem versão traz uma 8.0 ainda em teste. No Prisma 7, a opção <code>--skip-seed</code> não existe mais e o <code>migrate reset</code> não roda o seed sozinho. O banco precisa começar vazio: não configure seed. Se uma IA pedir o <code>migrate reset</code>, o Prisma recusa até você confirmar."]
   ],
   steps: [
     "Peça à IA para criar o projeto Nest em <code>backend/</code> e configurar o Prisma.",
@@ -489,13 +489,13 @@ B[4] = {
     "Peça o <code>schema.prisma</code> colando a seção “3. Estrutura de tabelas” inteira no prompt.",
     "Confira você mesma, coluna por coluna. Cada coluna faltando é um desvio; 3 desvios zeram o critério.",
     { html: "Suba e migre:", code: "docker compose up -d db\ncd backend\ncp .env.example .env\nnpm install\nnpx prisma migrate dev --name init" },
-    { html: "Teste a recriação e olhe as tabelas:", code: "npx prisma migrate reset --force --skip-seed\nnpx prisma studio" }
+    { html: "Teste a recriação e olhe as tabelas:", code: "npx prisma migrate reset --force\nnpx prisma studio" }
   ],
   prompt: "[CONTEXTO do modelo de prompt]\nTAREFA: criar o schema Prisma e a primeira migration.\nREGRAS: [cole \"3. Estrutura de tabelas\" e a RN10]\nRequisitos:\n- Modelos em inglês (Player, Club, Contract, Transaction, Lineup, Match, MatchDuel) mapeados com @@map/@map\n  para os nomes EXATOS do enunciado.\n- Dinheiro em Decimal com a precisão do enunciado. Datas em Timestamptz.\n- Unicidade do nome do clube conforme a RN10 via índice UNIQUE em lower(nome), escrito em SQL na migration.\n- escalacoes com PK composta (clube_id, jogador_id) e UNIQUE em jogador_id.\n- Nenhuma coluna para valores calculados.\nMostre o schema antes de gerar a migration.",
   check: [
     "As 7 tabelas existem com todos os nomes de colunas do enunciado.",
     "No psql: 'Águias FC' e depois 'águias fc' → erro; 'Aguias FC' → aceito.",
-    "migrate reset --force --skip-seed recria tudo vazio."
+    "migrate reset --force recria tudo vazio."
   ],
   commits: ["chore(backend): cria projeto NestJS com Prisma", "feat(db): schema das 7 tabelas e migration inicial", "chore: docker compose com PostgreSQL 16"],
   interview: [
@@ -925,7 +925,7 @@ B[21] = {
       ["8", "Uso de IA", "Ferramentas, onde, como e por quê, o que aceitou, alterou ou descartou"]
     ]
   },
-  code: { lang: "modelo do passo a passo", text: "# Banco de dados (na raiz do repositório)\ndocker compose up -d db\n\n# Backend (na pasta backend)\ncd backend\ncp .env.example .env\nnpm ci\nnpx prisma migrate deploy\nnpm run start:dev\n# API em http://localhost:3000 (a banca acrescenta /api/v1)\n\n# Frontend (em outro terminal, a partir da raiz)\ncd frontend\ncp .env.example .env\nnpm ci\nnpm run dev\n# Interface em http://localhost:5173\n\n# Recriar o banco do zero (na pasta backend)\nnpx prisma migrate reset --force --skip-seed" },
+  code: { lang: "modelo do passo a passo", text: "# Banco de dados (na raiz do repositório)\ndocker compose up -d db\n\n# Backend (na pasta backend)\ncd backend\ncp .env.example .env\nnpm ci\nnpx prisma migrate deploy\nnpm run start:dev\n# API em http://localhost:3000 (a banca acrescenta /api/v1)\n\n# Frontend (em outro terminal, a partir da raiz)\ncd frontend\ncp .env.example .env\nnpm ci\nnpm run dev\n# Interface em http://localhost:5173\n\n# Recriar o banco do zero (na pasta backend)\nnpx prisma migrate reset --force" },
   callouts: [
     ["warn", "A banca só copia o <code>.env.example</code> para <code>.env</code> se o README mandar. Os valores do exemplo precisam funcionar como estão."],
     ["tip", "<b>Exemplo de seção de IA:</b> “Usei o Claude Code para gerar o código, bloco a bloco. Eu escrevia o plano e as regras no prompt, revisava, rodava os testes e conferia com as tabelas do enunciado. Descartei a primeira versão da comissão, que arredondava cada faixa separadamente…”"]

@@ -429,8 +429,9 @@ As 7 tabelas criadas por **migration**, com os nomes exatos do enunciado, e coma
    npm install
    npx prisma migrate dev --name init
    ```
-6. Teste a recriação: `npx prisma migrate reset --force --skip-seed`.
-   > ⚠️ O `migrate reset` roda o *seed* automaticamente se houver um configurado. O banco precisa começar **vazio**, então use `--skip-seed` ou não configure seed.
+6. Teste a recriação: `npx prisma migrate reset --force`.
+   > ⚠️ Usamos o **Prisma 7.10.0** com versão fixa: o `npm install prisma` sem versão traz uma 8.0 ainda em teste. No Prisma 7, a opção `--skip-seed` **não existe mais** e o `migrate reset` não roda o seed sozinho. O banco precisa começar **vazio**: não configure seed.
+   > 🤖 Se o comando for pedido por uma IA, o Prisma 7 recusa o `migrate reset` até você confirmar. É você quem roda.
 7. Abra o banco e olhe as tabelas: `npx prisma studio`, ou `docker compose exec db psql -U postgres -d passe -c '\d jogadores'`.
 
 ### 🤖 Prompt sugerido
@@ -452,7 +453,7 @@ Mostre o schema antes de gerar a migration.
 ### ✅ Como conferir
 - [ ] As 7 tabelas existem, com **todos** os nomes de colunas do enunciado.
 - [ ] Teste a unicidade no `psql`: inserir 'Águias FC' e depois 'águias fc' → erro. Inserir 'Aguias FC' → aceita.
-- [ ] `migrate reset --force --skip-seed` recria tudo vazio.
+- [ ] `migrate reset --force` recria tudo vazio.
 
 ### 💾 Commits
 - `chore(backend): cria projeto NestJS com Prisma`
@@ -1190,7 +1191,7 @@ npm run dev
 # Interface em http://localhost:5173
 
 # Recriar o banco do zero (na pasta backend)
-npx prisma migrate reset --force --skip-seed
+npx prisma migrate reset --force
 ```
 
 > ⚠️ A banca **só** copia o `.env.example` para `.env` se o README mandar. Os valores do `.env.example` precisam funcionar como estão.
