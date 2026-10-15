@@ -62,7 +62,7 @@ Errata publicada a partir de 16/10/2026 prevalece sobre o enunciado.
 ## Decisões já tomadas (Bloco 2)
 
 - Estrutura de pastas: a árvore de "Bloco 2" em `docs/GUIA-DO-DESAFIO.md`.
-- Commits gerados com IA levam a linha `Co-Authored-By` (a banca aceitou na issue #2, desde que o README declare o uso).
+- Commits sem a linha `Co-Authored-By` (decisão da Thainá em 15/10); o uso de IA é declarado no README.
 - Unicidade do nome do clube (RN10): índice UNIQUE em `lower(nome)` criado na migration, sem coluna extra.
   O nome já chega ao banco normalizado pela V4.
 - README: um só, na raiz. Caminho principal = banco no Docker + backend e frontend com npm; Docker Compose
