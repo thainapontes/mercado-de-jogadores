@@ -92,6 +92,9 @@ cp .env.example .env
 npm ci
 ```
 
+Quando o `.env.example` ganhar uma variável nova, copie a linha para o `.env` dos dois PCs. Ex.: desde o Bloco 5,
+o backend não sobe sem `CORS_ORIGIN` (a origem do frontend, `http://localhost:5173`).
+
 O `npm ci` do backend também gera o cliente do Prisma (script `postinstall`). Depois, com o banco no ar
 (`docker compose up -d db`, na raiz), crie as tabelas, ainda dentro de `backend/`:
 

@@ -67,3 +67,29 @@ a cada sessão. **Como:** a IA propõe um plano e escreve o código; eu aprovo o
   - inserções diretas no `psql`: "Águias FC" e "águias fc" → recusado; "Aguias FC" → aceito; sigla repetida →
     recusado; mesmo jogador em duas escalações → recusado;
   - `migrate reset --force` recria o banco vazio.
+
+## Bloco 5 — Esqueleto da API (18/10)
+
+- **Pedido:** a fundação da API, sem regra de negócio, já respondendo como o enunciado exige:
+  - prefixo `/api/v1`;
+  - CORS só para o frontend;
+  - toda recusa como `{message}` em JSON;
+  - id malformado na URL → 404;
+  - corpo que não é objeto → 400;
+  - campos extras ignorados;
+  - log de cada requisição, Swagger, lint e formatação;
+  - utilitários de nome (V4) e de data (RN01) com testes.
+- **Aceito:** o plano de arquivos. A configuração fica numa função `setupApp`, usada pelo `main.ts` e pelos testes e2e,
+  para que o teste confira a configuração de verdade.
+- **Decidido por mim, a partir do que a IA levantou:**
+  - corpo enviado em pedido sem corpo é ignorado **mesmo se for JSON quebrado** (V1). Por isso o leitor de JSON nunca
+    falha na hora: ele marca o corpo como inválido, e o 400 só aparece nas rotas que usam `@Body()`;
+  - POST sem `Content-Type: application/json` conta como corpo que não é objeto → 400;
+  - datas na resposta com segundos e sem milissegundos;
+  - `lint` só verifica (`--max-warnings 0`), e há um `lint:fix` separado.
+- **Problema encontrado pela IA:** com `transform: true`, o `ValidationPipe` do Nest converte sozinho os parâmetros da
+  URL (`"01"` vira `1`), e `/players/01` daria 200 em vez de 404 (V8). A conversão foi desligada numa subclasse
+  (`StrictValidationPipe`). Para provar que o teste pega isso, a proteção foi retirada de propósito: o teste do `01`
+  falhou, e a proteção voltou.
+- **Conferido:** 55 testes unitários e 28 e2e passando; `lint` e `format:check` sem erros; API no ar com `curl`
+  (rota inexistente → 404 em JSON, `/api/docs` abre, uma linha de log por requisição).

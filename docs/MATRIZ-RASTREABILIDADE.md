@@ -13,21 +13,21 @@ Uma linha por regra do enunciado. Vá preenchendo as colunas **Onde no código**
 
 | Regra | O que diz (resumo) | Erro | Bloco do guia | Itens do barema | Onde no código | Teste automatizado | Conferido à mão | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| V1 | Corpo tem que ser um objeto JSON; JSON inválido, `[]`, `"x"` ou `10` são recusados; corpo em GET, DELETE e venda é ignorado | 400 | 5 | B01, B02 | | | ☐ | ⬜ |
-| V2 | Cada campo no tipo certo: `"15"` (texto) é recusado; inteiro não aceita `50.5`, mas aceita `50.0` | 400 | 5, 7 | B01 | | | ☐ | ⬜ |
+| V1 | Corpo tem que ser um objeto JSON; JSON inválido, `[]`, `"x"` ou `10` são recusados; corpo em GET, DELETE e venda é ignorado | 400 | 5 | B01, B02 | `common/body/json-body.middleware.ts` (lê sem falhar) + `common/pipes/object-body.pipe.ts` (400 só onde há `@Body()`) | `test/app.e2e-spec.ts` (V1): JSON quebrado, `[]`, `"x"`, `10`, sem corpo, `text/plain`; corpo quebrado ignorado no DELETE | ☐ | ✅ |
+| V2 | Cada campo no tipo certo: `"15"` (texto) é recusado; inteiro não aceita `50.5`, mas aceita `50.0` | 400 | 5, 7 | B01 | Fundação: `common/validation/strict-validation.pipe.ts` (sem conversão implícita, nem nos parâmetros da URL). Tipo de cada campo: DTOs (Blocos 7–10) | `test/app.e2e-spec.ts` (V2 e V7): `"15"` e `50.5` recusados, `50.0` aceito | ☐ | 🟨 |
 | V3 | Valores em moedas não são enviados; se vierem no corpo (`base_value`, `cash`), são ignorados | — | 7 | B03 | | | ☐ | ⬜ |
-| V4 | Nomes e `search`: tira espaços das pontas, junta espaços repetidos; tab e quebra de linha são recusados; vazio conta como ausente | 400 | 5 | B01, B07 | | | ☐ | ⬜ |
+| V4 | Nomes e `search`: tira espaços das pontas, junta espaços repetidos; tab e quebra de linha são recusados; vazio conta como ausente | 400 | 5 | B01, B07 | `common/text/normalize-name.ts` (`normalizeName`, `hasControlCharacter`). Uso nos DTOs e no `search`: Blocos 7–9 | `normalize-name.spec.ts` | ☐ | 🟨 |
 | V5 | Valores de lista exatamente como escritos (`ATA`, `true`); `"ata"` e `"TRUE"` são recusados | 400 | 5, 7 | B01 | | | ☐ | ⬜ |
 | V6 | Campo obrigatório ausente ou `null` é recusado | 400 | 7 | B01 | | | ☐ | ⬜ |
-| V7 | Campos calculados ou controlados pelo sistema e campos desconhecidos são ignorados, sem erro | — | 5, 7 | B03 | | | ☐ | ⬜ |
-| V8 | Recurso inexistente → 404; id malformado na URL (`abc`, `0`, `01`, > 2147483647) → 404; jogador excluído conta como inexistente | 404 | 5 | B02, B08, B11, B16, B20, B21 | | | ☐ | ⬜ |
-| V9 | Dado inválido → 400; não existe → 404; regra de negócio → 409 | 400/404/409 | 5 | B02 | | | ☐ | ⬜ |
+| V7 | Campos calculados ou controlados pelo sistema e campos desconhecidos são ignorados, sem erro | — | 5, 7 | B03 | `whitelist: true` sem `forbidNonWhitelisted` em `common/validation/strict-validation.pipe.ts` | `test/app.e2e-spec.ts`: `id` e `cash` extras ignorados | ☐ | 🟨 |
+| V8 | Recurso inexistente → 404; id malformado na URL (`abc`, `0`, `01`, > 2147483647) → 404; jogador excluído conta como inexistente | 404 | 5 | B02, B08, B11, B16, B20, B21 | Id na URL: `common/pipes/parse-id.pipe.ts`. Recurso inexistente e jogador excluído: services (Blocos 7–10) | `parse-id.pipe.spec.ts`; `test/app.e2e-spec.ts` (V8) | ☐ | 🟨 |
+| V9 | Dado inválido → 400; não existe → 404; regra de negócio → 409 | 400/404/409 | 5 | B02 | `common/filters/all-exceptions.filter.ts`: `{message}` em JSON, sem stack, 500 genérico, rota inexistente 404. Os 409: services | `test/app.e2e-spec.ts` (`expectJsonError` em todos os casos) | ☐ | 🟨 |
 
 ## Regras de negócio (RN01–RN21)
 
 | Regra | O que diz (resumo) | Erro | Bloco do guia | Itens do barema | Onde no código | Teste automatizado | Conferido à mão | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| RN01 | Datas de entrada em `AAAA-MM-DDTHH:MM-03:00`; data inexistente é recusada; saída em `AAAA-MM-DDTHH:MM:SS-03:00` | 400 | 5, 10 | B12 | | | ☐ | ⬜ |
+| RN01 | Datas de entrada em `AAAA-MM-DDTHH:MM-03:00`; data inexistente é recusada; saída em `AAAA-MM-DDTHH:MM:SS-03:00` | 400 | 5, 10 | B12 | `common/dates/api-date-time.ts` (`parseApiDateTime`, `formatApiDateTime`). Uso: compra (Bloco 10) e mappers | `api-date-time.spec.ts`: 4 válidas, 17 inválidas, saída `-03:00` | ☐ | 🟨 |
 | RN02 | Desconto por condição: APTO 0%, MAL_CONDICIONADO 15%, DOENTE 30% | — | 6 | B05 | | | ☐ | ⬜ |
 | RN03 | Agilidade mexe só no desconto e só fora de APTO: 80–100 → metade; 1–30 → +10 pontos | — | 6 | B05 | | | ☐ | ⬜ |
 | RN04 | Idade: até 21 → +10%; 22–31 → 0%; 32+ → −10% | — | 6 | B05 | | | ☐ | ⬜ |
