@@ -149,3 +149,27 @@ a cada sessão. **Como:** a IA propõe um plano e escreve o código; eu aprovo o
 - **Conferido:** 189 testes unitários e 68 e2e (40 de jogadores) passando; `lint`, `format:check`, `tsc` e `build` sem
   erros; API compilada no ar com `curl` (201 com `Location`, nome normalizado, `base_value` enviado ignorado,
   `market_value` 37 após MAL_CONDICIONADO, 204 no DELETE e 404 depois).
+
+## Bloco 8 — Listagem de jogadores (20/10)
+
+- **Pedido:** `GET /players` com busca, filtros combinados, ordenação de até dois critérios e paginação, com a
+  validação estrita dos query params e a tabela de paginação da RN07 virando teste.
+- **Aceito:** a opção A do guia: o banco filtra o que é simples (ativos, posição, condição, clube/livre, idade), e o
+  valor de mercado é calculado pela função do domínio; o filtro de valor, a busca, a ordenação e a paginação são feitos
+  em memória. A fórmula continua num só lugar, o que é adequado ao tamanho da liga (máximo de 20 clubes).
+- **Também aceito:**
+  - decoradores reutilizáveis para query params em `common/query/query-params.ts` (inteiro, id, decimal, valor de
+    lista, lista sem repetir o campo e busca), que serão usados também em clubes, histórico e partidas;
+  - os parâmetros chegam como texto, são validados por expressão regular (`01`, `1.0`, `1e2` e `10,5` recusados) e só
+    depois são convertidos (`toPlayerListCriteria`);
+  - a busca usa a mesma normalização da ordem alfabética (minúsculas e sem acentos), agora exportada de
+    `domain/ordering.ts` como `toComparableText`;
+  - valor fora do aceito é recusado com 400, nunca ajustado (`limit=51` → 400).
+- **Erros da IA corrigidos pelos testes (todos nos dados dos testes):**
+  - a IA errou à mão a ordem esperada de 7 casos de ordenação, esquecendo o desempate pelo nome. Ao corrigir, os dados
+    foram mudados para que o 2º critério de ordenação realmente mude o resultado, porque antes alguns casos de dois
+    critérios davam a mesma ordem do primeiro e não provavam nada;
+  - num e2e, a IA cadastrou um jogador de 35 anos com `potential` acima do maior atributo (recusado, como manda a
+    regra) e supôs que outros jogadores valiam mais de 30 sem conferir o overall deles nas próprias posições.
+- **Conferido:** 299 testes unitários e 109 e2e passando; `lint`, `format:check` e `tsc` sem erros; API compilada no ar
+  (`sort=POSITION` → 400, `club_id=999` → 404, jogador excluído fora da lista).
