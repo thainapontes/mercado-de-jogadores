@@ -14,6 +14,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { appOptions, setupApp } from '../src/app.setup';
 import { ParseIdPipe } from '../src/common/pipes/parse-id.pipe';
+import { expectJsonError } from './support/expect-json-error';
 
 const FRONTEND_ORIGIN = 'http://localhost:5173';
 
@@ -72,15 +73,6 @@ describe('Fundação da API (e2e)', () => {
       .post('/api/v1/samples')
       .set('Content-Type', 'application/json')
       .send(body);
-
-  function expectJsonError(response: request.Response, status: number) {
-    expect(response.status).toBe(status);
-    expect(response.headers['content-type']).toMatch(/^application\/json/);
-    const body = response.body as Record<string, unknown>;
-    expect(typeof body.message).toBe('string');
-    expect(body.message).not.toBe('');
-    expect(JSON.stringify(body)).not.toMatch(/\bat \S+:\d+/);
-  }
 
   describe('prefixo e rota inexistente', () => {
     it('responde nas rotas com /api/v1', async () => {
