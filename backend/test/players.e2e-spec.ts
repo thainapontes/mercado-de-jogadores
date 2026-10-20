@@ -1,12 +1,8 @@
 import { INestApplication } from '@nestjs/common';
-import type { NestExpressApplication } from '@nestjs/platform-express';
-import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { AppModule } from '../src/app.module';
-import { appOptions, setupApp } from '../src/app.setup';
-import { ClockService } from '../src/common/clock/clock.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { createTestApp } from './support/create-test-app';
 import { expectJsonError } from './support/expect-json-error';
 import { clearDatabase } from './support/test-database';
 
@@ -40,17 +36,7 @@ describe('Jogadores (e2e)', () => {
   let prisma: PrismaService;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
-      .overrideProvider(ClockService)
-      .useValue({ now: () => NOW })
-      .compile();
-    const nestApp =
-      moduleRef.createNestApplication<NestExpressApplication>(appOptions);
-    nestApp.useLogger(false);
-    setupApp(nestApp, { corsOrigins: ['http://localhost:5173'] });
-    await nestApp.init();
-    app = nestApp;
-    prisma = moduleRef.get(PrismaService);
+    ({ app, prisma } = await createTestApp(NOW));
   });
 
   beforeEach(async () => {
