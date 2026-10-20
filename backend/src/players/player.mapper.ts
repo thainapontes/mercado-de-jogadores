@@ -1,4 +1,6 @@
 import { calculateMarketValue } from '../domain/market-value';
+import { Decimal } from '../domain/money';
+import { PageMeta } from '../domain/pagination';
 import { calculateOverall } from '../domain/overall';
 import { Condition, Position } from '../domain/types';
 import { Player } from '../generated/prisma/client';
@@ -23,6 +25,40 @@ export interface PlayerResponse {
   club_id: number | null;
 }
 
+export interface PlayerPageResponse {
+  data: PlayerResponse[];
+  meta: {
+    page: number;
+    limit: number;
+    total_items: number;
+    total_pages: number;
+  };
+}
+
+export function marketValueOf(player: Player): Decimal {
+  return calculateMarketValue(
+    player.baseValue,
+    player.condition as Condition,
+    player.agility,
+    player.age,
+  );
+}
+
+export function toPlayerPageResponse(
+  players: Player[],
+  meta: PageMeta,
+): PlayerPageResponse {
+  return {
+    data: players.map(toPlayerResponse),
+    meta: {
+      page: meta.page,
+      limit: meta.limit,
+      total_items: meta.totalItems,
+      total_pages: meta.totalPages,
+    },
+  };
+}
+
 export function toPlayerResponse(player: Player): PlayerResponse {
   const position = player.position as Position;
   const condition = player.condition as Condition;
@@ -34,12 +70,7 @@ export function toPlayerResponse(player: Player): PlayerResponse {
     age: player.age,
     condition,
     base_value: player.baseValue.toNumber(),
-    market_value: calculateMarketValue(
-      player.baseValue,
-      condition,
-      player.agility,
-      player.age,
-    ).toNumber(),
+    market_value: marketValueOf(player).toNumber(),
     pace: player.pace,
     shooting: player.shooting,
     passing: player.passing,

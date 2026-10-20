@@ -6,14 +6,29 @@ import {
 import { ClockService } from '../common/clock/clock.service';
 import { calculateBaseValue } from '../domain/base-value';
 import { calculateOverall } from '../domain/overall';
-import { Player } from '../generated/prisma/client';
+import { paginate } from '../domain/pagination';
+import {
+  comparePlayers,
+  isWithinValueRange,
+  matchesSearch,
+} from '../domain/player-listing';
+import { Position } from '../domain/types';
+import { Player, Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
+import { PlayerListCriteria } from './dto/list-players.query';
 import { UpdateConditionDto } from './dto/update-condition.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
-import { PlayerResponse, toPlayerResponse } from './player.mapper';
+import {
+  marketValueOf,
+  PlayerPageResponse,
+  PlayerResponse,
+  toPlayerPageResponse,
+  toPlayerResponse,
+} from './player.mapper';
 
 const PLAYER_NOT_FOUND = 'Jogador não encontrado.';
+const CLUB_NOT_FOUND = 'Clube não encontrado.';
 const CHANGED_MEANWHILE =
   'O jogador foi alterado por outra operação. Consulte de novo e tente outra vez.';
 
@@ -47,6 +62,46 @@ export class PlayersService {
       },
     });
     return toPlayerResponse(player);
+  }
+
+  async list(criteria: PlayerListCriteria): Promise<PlayerPageResponse> {
+    if (criteria.clubId !== undefined) {
+      const club = await this.prisma.club.findUnique({
+        where: { id: criteria.clubId },
+      });
+      if (!club) {
+        throw new NotFoundException(CLUB_NOT_FOUND);
+      }
+    }
+
+    const players = await this.prisma.player.findMany({
+      where: {
+        deletedAt: null,
+        position: criteria.position,
+        condition: criteria.condition,
+        clubId: clubFilter(criteria),
+        age: { gte: criteria.minAge, lte: criteria.maxAge },
+      },
+    });
+    const selected = players
+      .map((player) => ({
+        ...player,
+        position: player.position as Position,
+        marketValue: marketValueOf(player),
+      }))
+      .filter(
+        (player) =>
+          isWithinValueRange(
+            player.marketValue,
+            criteria.minValue,
+            criteria.maxValue,
+          ) &&
+          (criteria.search === undefined ||
+            matchesSearch(player.name, criteria.search)),
+      )
+      .sort(comparePlayers(criteria.sorts));
+    const page = paginate(selected, criteria.page, criteria.limit);
+    return toPlayerPageResponse(page.items, page.meta);
   }
 
   async findOne(id: number): Promise<PlayerResponse> {
@@ -142,4 +197,16 @@ export class PlayersService {
     }
     return player;
   }
+}
+
+function clubFilter(
+  criteria: PlayerListCriteria,
+): Prisma.PlayerWhereInput['clubId'] {
+  if (criteria.clubId !== undefined) {
+    return criteria.clubId;
+  }
+  if (criteria.free === undefined) {
+    return undefined;
+  }
+  return criteria.free ? null : { not: null };
 }

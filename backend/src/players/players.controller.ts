@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   Res,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -16,9 +17,13 @@ import type { Response } from 'express';
 import { API_PREFIX } from '../app.setup';
 import { ParseIdPipe } from '../common/pipes/parse-id.pipe';
 import { CreatePlayerDto } from './dto/create-player.dto';
+import {
+  ListPlayersQueryDto,
+  toPlayerListCriteria,
+} from './dto/list-players.query';
 import { UpdateConditionDto } from './dto/update-condition.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
-import { PlayerResponse } from './player.mapper';
+import { PlayerPageResponse, PlayerResponse } from './player.mapper';
 import { PlayersService } from './players.service';
 
 @ApiTags('players')
@@ -34,6 +39,11 @@ export class PlayersController {
     const player = await this.players.create(dto);
     response.location(`${API_PREFIX}/players/${player.id}`);
     return player;
+  }
+
+  @Get()
+  list(@Query() query: ListPlayersQueryDto): Promise<PlayerPageResponse> {
+    return this.players.list(toPlayerListCriteria(query));
   }
 
   @Get(':id')
