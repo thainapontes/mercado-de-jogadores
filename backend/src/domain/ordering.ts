@@ -36,10 +36,13 @@ export function compareRosterOrder(a: RosterEntry, b: RosterEntry): number {
   );
 }
 
+export function toComparableText(text: string): string {
+  return text.toLowerCase().normalize('NFD').replace(ACCENT_MARK, '');
+}
+
 function toCodePoints(name: string): number[] {
-  const comparable = name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(ACCENT_MARK, '');
-  return Array.from(comparable, (character) => character.codePointAt(0) ?? 0);
+  return Array.from(
+    toComparableText(name),
+    (character) => character.codePointAt(0) ?? 0,
+  );
 }
