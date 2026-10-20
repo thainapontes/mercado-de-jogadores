@@ -93,3 +93,27 @@ a cada sessão. **Como:** a IA propõe um plano e escreve o código; eu aprovo o
   falhou, e a proteção voltou.
 - **Conferido:** 55 testes unitários e 28 e2e passando; `lint` e `format:check` sem erros; API no ar com `curl`
   (rota inexistente → 404 em JSON, `/api/docs` abre, uma linha de log por requisição).
+
+## Bloco 6 — O domínio: os cálculos (19/10)
+
+- **Pedido:** todos os cálculos como funções puras em `backend/src/domain`, sem banco e sem relógio (o "agora" entra
+  como parâmetro), com cada tabela de exemplo do enunciado virando teste, linha por linha (`it.each`).
+- **Aceito:** o plano de arquivos: `money`, `overall`, `base-value`, `market-value`, `purchase`, `sale`, `ordering` e
+  `match-engine`, mais `types` (posições e condições) e `integer-rounding` (inteiro com meio para cima, usado pelo
+  overall e pelo × 0,85 da partida).
+- **Decidido por mim, a partir do que a IA levantou:**
+  - `Decimal` do próprio Prisma (`@prisma/client/runtime/client`), sem pacote novo: é o decimal.js e a mesma classe
+    que o Prisma devolve ao ler as colunas `DECIMAL`;
+  - funções que juntam as contas (`calculatePurchase` e `calculateSale`): custo total, lucro, crédito e situação do
+    contrato também ficam no domínio, e os services só gravam;
+  - contrato `RESCINDIDO` quando a multa é maior que 0, senão `ENCERRADO`;
+  - ordem alfabética comparando pontos de código Unicode (o enunciado define caractere assim), não `localeCompare`;
+  - `formation`, `standings`, `club-values` e `transaction-summary` ficam para os Blocos 9, 11 e 12, para não haver
+    código sem uso;
+  - cada commit leva o teste da própria regra, em vez de um commit só de testes no fim.
+- **Erros da IA corrigidos pelos testes:**
+  - a IA inventou um caso de overall "72,49 → 72" que não existe: todos os pesos são múltiplos de 5, então a soma
+    também é. Trocado por 72,45 → 72;
+  - num teste da partida, a IA deixou a defesa do 2º jogador de linha no valor padrão, e o "0 × 0" esperado deu gol.
+    O código estava certo; os dados do teste foram corrigidos.
+- **Conferido:** 143 testes unitários (88 novos no domínio) e 28 e2e passando; `lint`, `format:check` e `tsc` sem erros.
