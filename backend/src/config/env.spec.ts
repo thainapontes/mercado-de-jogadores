@@ -1,4 +1,4 @@
-import { readEnv } from './env';
+import { readDatabaseUrl, readEnv } from './env';
 
 describe('readEnv', () => {
   it('lê a porta e as origens do CORS', () => {
@@ -21,6 +21,21 @@ describe('readEnv', () => {
     'não sobe com CORS_ORIGIN inválido: %j',
     (source) => {
       expect(() => readEnv(source)).toThrow(/CORS_ORIGIN/);
+    },
+  );
+});
+
+describe('readDatabaseUrl', () => {
+  it('lê a conexão do banco', () => {
+    expect(
+      readDatabaseUrl({ DATABASE_URL: 'postgresql://localhost:5432/passe' }),
+    ).toBe('postgresql://localhost:5432/passe');
+  });
+
+  it.each([{}, { DATABASE_URL: '' }])(
+    'não sobe sem DATABASE_URL: %j',
+    (source) => {
+      expect(() => readDatabaseUrl(source)).toThrow(/DATABASE_URL/);
     },
   );
 });

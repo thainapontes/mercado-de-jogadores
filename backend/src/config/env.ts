@@ -27,3 +27,12 @@ export function readEnv(source: NodeJS.ProcessEnv): AppEnv {
     corsOrigins,
   };
 }
+
+export function readDatabaseUrl(source: NodeJS.ProcessEnv): string {
+  if (!source.DATABASE_URL) {
+    throw new Error(
+      'Defina DATABASE_URL no .env com a conexão do PostgreSQL (veja o .env.example).',
+    );
+  }
+  return source.DATABASE_URL;
+}
