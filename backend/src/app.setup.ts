@@ -8,6 +8,8 @@ import { ObjectBodyPipe } from './common/pipes/object-body.pipe';
 import { StrictValidationPipe } from './common/validation/strict-validation.pipe';
 import type { AppEnv } from './config/env';
 
+export const API_PREFIX = '/api/v1';
+
 export const appOptions: NestApplicationOptions = { bodyParser: false };
 
 export function setupApp(
@@ -17,7 +19,7 @@ export function setupApp(
   app.use(requestLogger);
   app.enableCors({ origin: env.corsOrigins, exposedHeaders: ['Location'] });
   app.use(jsonBody);
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix(API_PREFIX);
   app.useGlobalPipes(new ObjectBodyPipe(), new StrictValidationPipe());
   app.useGlobalFilters(new AllExceptionsFilter());
 
