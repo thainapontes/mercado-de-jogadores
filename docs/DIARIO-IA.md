@@ -117,3 +117,35 @@ a cada sessão. **Como:** a IA propõe um plano e escreve o código; eu aprovo o
   - num teste da partida, a IA deixou a defesa do 2º jogador de linha no valor padrão, e o "0 × 0" esperado deu gol.
     O código estava certo; os dados do teste foram corrigidos.
 - **Conferido:** 143 testes unitários (88 novos no domínio) e 28 e2e passando; `lint`, `format:check` e `tsc` sem erros.
+
+## Bloco 7 — Jogadores: cadastro, consulta, edição, condição e exclusão (19 e 20/10)
+
+- **Pedido:** `POST /players`, `GET /players/{id}`, `PUT /players/{id}`, `PATCH /players/{id}/condition` e
+  `DELETE /players/{id}`, com as validações de "Limites de cada campo", RN06, RN08 e RN09, e a tabela "Como conferir"
+  do guia virando teste.
+- **Aceito:** o plano de arquivos: `PrismaService`, `ClockService`, `@NormalizeName()` e `Satisfies` em `common`, e o
+  módulo `players` com 3 DTOs, regras do jogador, um único mapper (`toPlayerResponse`), service e controller.
+- **Decidido por mim, a partir do que a IA levantou:**
+  - e2e com banco de verdade: um banco separado, `passe_test`, no mesmo container. O `prisma migrate deploy` cria
+    esse banco e aplica as migrations antes dos testes, e cada teste começa com as tabelas vazias;
+  - duas requisições ao mesmo tempo: `PUT`, `PATCH` e `DELETE` gravam com `updateMany` repetindo a condição
+    ("ainda livre", "ainda na mesma condição"). Se outra operação mudou o jogador no meio, nada é gravado e a
+    resposta é 409;
+  - jogador que vira DOENTE sai da escalação já neste bloco, na mesma transação, e a formação continua salva;
+  - "palavra" do nome = trecho sem espaços com pelo menos uma letra; o tamanho conta caracteres Unicode;
+  - agilidade ≤ 85 com 35+ anos também vale no `PUT` (400); com clube, enviar a mesma posição é aceito.
+- **Problemas de ambiente resolvidos:**
+  - um PostgreSQL instalado no sistema ocupava a porta 5432: a Thainá parou o serviço, e o container foi recriado
+    para publicar a porta (registrado no `ROTINA.md`);
+  - o client do Prisma 7 usa `import()` dinâmico, que o Jest só aceita com `--experimental-vm-modules`. O
+    `test:e2e` passou a chamar `node --experimental-vm-modules ...`, que funciona também no Windows (ao contrário
+    de `NODE_OPTIONS=...` no script). O Jest também ganhou um `moduleNameMapper` para os imports `.js` do client gerado.
+- **Erros da IA corrigidos pelos testes (todos nos dados dos testes, não no código):**
+  - a IA esperava que "A B" fosse recusado por ser curto, mas ele tem 3 caracteres e duas palavras: é válido;
+  - a IA calculou o overall do Meia Lua como ATA como 73; o certo é 72 (7.160 ÷ 100 = 71,6);
+  - a IA copiou a idade 23 do exemplo 2.1.5 para editar o Meia Lua, que tem 25: o 409 de "idade menor" estava certo.
+  Além disso, as regras entre campos passaram a deixar o erro de tipo para o validador de tipo (`potential: "86"`
+  dá "deve ser inteiro", não "menor que o maior atributo").
+- **Conferido:** 189 testes unitários e 68 e2e (40 de jogadores) passando; `lint`, `format:check`, `tsc` e `build` sem
+  erros; API compilada no ar com `curl` (201 com `Location`, nome normalizado, `base_value` enviado ignorado,
+  `market_value` 37 após MAL_CONDICIONADO, 204 no DELETE e 404 depois).

@@ -21,6 +21,9 @@ claude                    # abre o Claude Code; diga em que bloco paramos
 - Se o `git pull` trouxe uma pasta nova em `backend/prisma/migrations/`, aplique no seu banco: `npx prisma migrate dev`
   (na pasta `backend/`).
 - Para revisar o código no editor, em outro terminal: `code .`
+- Testes do backend (na pasta `backend/`): `npm test` (unitários, sem banco) e `npm run test:e2e` (precisa do banco no
+  ar). O e2e usa um banco separado, `passe_test`, no mesmo container: ele é criado e recebe as migrations sozinho, e
+  cada teste começa com as tabelas vazias. Os dados do banco `passe` nunca são apagados pelos testes.
 
 ### Ao parar
 
@@ -127,6 +130,9 @@ O `CLAUDE.md` vem junto com o repositório, então o contexto do projeto já est
 
 ## Problemas conhecidos
 
+- **Porta 5432 ocupada (`address already in use` no `docker compose up`):** há um PostgreSQL instalado direto no
+  sistema. Pare o serviço com `sudo systemctl stop postgresql` (e `sudo systemctl disable postgresql` para ele não
+  voltar ao ligar o PC). Aconteceu em 19/10.
 - **Porta 5173 ocupada no PC do trabalho:** o projeto `mk-anomaly-detection-service` usa a mesma porta do nosso
   frontend. Antes de rodar o desafio, pare os containers dele (`docker compose stop`, na pasta daquele projeto).
 - **`node -v` mostra outra versão:** rode `nvm use` dentro da pasta do projeto.
