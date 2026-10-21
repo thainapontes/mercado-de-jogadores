@@ -11,3 +11,10 @@ export async function findActivePlayer(
   }
   return player;
 }
+
+export async function lockPlayers(
+  tx: Prisma.TransactionClient,
+  ids: number[],
+): Promise<void> {
+  await tx.$queryRaw`SELECT id FROM jogadores WHERE id = ANY(${ids}) FOR UPDATE`;
+}

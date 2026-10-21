@@ -122,7 +122,7 @@ function countGoals(duels: Duel[], side: MatchSide): number {
     .length;
 }
 
-function resultOf(homeGoals: number, awayGoals: number): MatchResult {
+export function resultOf(homeGoals: number, awayGoals: number): MatchResult {
   if (homeGoals > awayGoals) {
     return 'MANDANTE';
   }
