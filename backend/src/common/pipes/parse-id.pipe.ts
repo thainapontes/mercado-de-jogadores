@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, PipeTransform } from '@nestjs/common';
+import { MAX_ID } from '../ids/max-id';
 
-const MAX_ID = 2_147_483_647;
 const POSITIVE_INTEGER = /^[1-9]\d*$/;
 
 @Injectable()

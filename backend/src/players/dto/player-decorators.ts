@@ -1,6 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
-import { IsDefined, IsIn, IsInt, IsString, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsString, Max, Min } from 'class-validator';
 import { NormalizeName } from '../../common/validation/normalize-name.transform';
+import { Required } from '../../common/validation/required';
 import { Satisfies } from '../../common/validation/satisfies';
 import { CONDITIONS, POSITIONS } from '../../domain/types';
 import {
@@ -14,10 +15,6 @@ import {
   SENIOR_AGE,
   SENIOR_AGILITY_MAX,
 } from './player-rules';
-
-export function Required(field: string): PropertyDecorator {
-  return IsDefined({ message: `O campo ${field} é obrigatório.` });
-}
 
 export function IntegerBetween(
   field: string,

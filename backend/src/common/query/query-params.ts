@@ -2,10 +2,9 @@ import { applyDecorators } from '@nestjs/common';
 import { Transform } from 'class-transformer';
 import { IsOptional } from 'class-validator';
 import { Decimal } from '../../domain/money';
+import { MAX_ID } from '../ids/max-id';
 import { hasControlCharacter, normalizeName } from '../text/normalize-name';
 import { Satisfies } from '../validation/satisfies';
-
-export const MAX_QUERY_ID = 2_147_483_647;
 
 const POSITIVE_INTEGER = /^[1-9]\d*$/;
 const DECIMAL = /^(0|[1-9]\d*)(\.\d{1,2})?$/;
@@ -44,7 +43,7 @@ export function QueryId(field: string): PropertyDecorator {
     IsOptional(),
     Satisfies(
       'queryId',
-      (value) => isQueryInteger(value) && Number(value) <= MAX_QUERY_ID,
+      (value) => isQueryInteger(value) && Number(value) <= MAX_ID,
       `O parâmetro ${field} deve ser um id: inteiro positivo, escrito só com dígitos.`,
     ),
   );

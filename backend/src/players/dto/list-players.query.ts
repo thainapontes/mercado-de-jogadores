@@ -1,7 +1,7 @@
+import { MAX_ID } from '../../common/ids/max-id';
 import {
   isQueryDecimal,
   isQueryInteger,
-  MAX_QUERY_ID,
   QueryDecimal,
   QueryEnum,
   QueryId,
@@ -81,7 +81,7 @@ export class ListPlayersQueryDto {
   @QueryList('sort', PLAYER_SORTS, { maxItems: MAX_SORTS, keyOf: sortField })
   sort?: string;
 
-  @QueryInteger('page', 1, MAX_QUERY_ID)
+  @QueryInteger('page', 1, MAX_ID)
   page?: string;
 
   @QueryInteger('limit', 1, LIMIT_MAX)
