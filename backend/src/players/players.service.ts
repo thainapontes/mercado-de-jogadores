@@ -1,8 +1,5 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { findClub } from '../clubs/club.queries';
 import { ClockService } from '../common/clock/clock.service';
 import { calculateBaseValue } from '../domain/base-value';
 import { calculateOverall } from '../domain/overall';
@@ -26,9 +23,8 @@ import {
   toPlayerPageResponse,
   toPlayerResponse,
 } from './player.mapper';
+import { findActivePlayer } from './player.queries';
 
-const PLAYER_NOT_FOUND = 'Jogador não encontrado.';
-const CLUB_NOT_FOUND = 'Clube não encontrado.';
 const CHANGED_MEANWHILE =
   'O jogador foi alterado por outra operação. Consulte de novo e tente outra vez.';
 
@@ -66,12 +62,7 @@ export class PlayersService {
 
   async list(criteria: PlayerListCriteria): Promise<PlayerPageResponse> {
     if (criteria.clubId !== undefined) {
-      const club = await this.prisma.club.findUnique({
-        where: { id: criteria.clubId },
-      });
-      if (!club) {
-        throw new NotFoundException(CLUB_NOT_FOUND);
-      }
+      await findClub(this.prisma, criteria.clubId);
     }
 
     const players = await this.prisma.player.findMany({
@@ -188,14 +179,8 @@ export class PlayersService {
     }
   }
 
-  private async findActive(id: number): Promise<Player> {
-    const player = await this.prisma.player.findFirst({
-      where: { id, deletedAt: null },
-    });
-    if (!player) {
-      throw new NotFoundException(PLAYER_NOT_FOUND);
-    }
-    return player;
+  private findActive(id: number): Promise<Player> {
+    return findActivePlayer(this.prisma, id);
   }
 }
 
