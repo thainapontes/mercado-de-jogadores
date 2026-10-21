@@ -173,3 +173,70 @@ a cada sessão. **Como:** a IA propõe um plano e escreve o código; eu aprovo o
     regra) e supôs que outros jogadores valiam mais de 30 sem conferir o overall deles nas próprias posições.
 - **Conferido:** 299 testes unitários e 109 e2e passando; `lint`, `format:check` e `tsc` sem erros; API compilada no ar
   (`sort=POSITION` → 400, `club_id=999` → 404, jogador excluído fora da lista).
+
+## Blocos 9 a 12 — Clubes, mercado, histórico e liga (20/10)
+
+> Pedi os Blocos 9 a 13 de uma vez, sem a parada de aprovação do plano em cada bloco, por causa do prazo.
+> Por isso, as decisões abaixo foram tomadas pela IA e ainda passam pela minha revisão antes dos commits.
+
+- **Pedido:** `POST/GET /clubs` e `GET /clubs/{id}` (Bloco 9); compra e venda (Bloco 10); histórico com `summary` e
+  CSV (Bloco 11); escalação, partidas e classificação (Bloco 12). As tabelas do enunciado viraram testes.
+- **Feito pela IA (a revisar):**
+  - cada cálculo novo é função pura no domínio: valor do elenco, patrimônio e ordenação dos clubes
+    (`domain/club-value.ts`), prazo de até 1.095 dias da fidelidade (`domain/purchase.ts`), resumo do histórico
+    (`domain/transaction-summary.ts`), formações (`domain/lineup.ts`) e classificação (`domain/standings.ts`). A
+    classificação reaproveita o `resultOf` do motor da partida, para "quem venceu" ficar num lugar só; os dias
+    restantes e o % de multa do `GET /clubs/{id}` usam as mesmas funções da venda;
+  - consultas reaproveitadas com o 404 embutido: `findActivePlayer` (jogador excluído conta como inexistente) e
+    `findClub`; o `PlayersService` passou a usá-las também;
+  - **concorrência:** compra, venda e escalação travam a linha do clube (`SELECT … FOR UPDATE`) dentro da
+    `$transaction`, e o jogador só muda de clube com `updateMany` condicionado (`clubId: null` na compra). Assim, duas
+    compras simultâneas do mesmo jogador dão 200 e 409, e o limite de 12 e o de 50% do caixa não são furados. A
+    criação de clube usa `LOCK TABLE clubes` para o limite de 20, e o erro de unicidade do banco (`P2002`) também
+    vira 409;
+  - o CSV e o histórico usam a mesma consulta (`TransactionsService.find`); o `Content-Type: text/csv` é definido
+    só depois do sucesso, para os erros continuarem em JSON;
+  - o relógio dos testes e2e passou a ser ajustável (`TestClock.set`), para comprar num instante e vender noutro.
+- **Decisões que vão para "Decisões e premissas" do README:**
+  - id no corpo (`club_id`, `player_ids`, `home_club_id`, `away_club_id`) acima de 2.147.483.647 → 400;
+  - o prazo de `loyalty_until` é medido do instante exato do servidor: no máximo 1.095 × 24 h depois;
+  - nome do clube: "palavra" segue a definição da V4 (precisa de letra), então hífen ou ponto soltos não contam como
+    palavra; a "primeira letra do nome" da sigla é o primeiro caractere que é letra;
+  - jogador alterado por outra operação no meio da compra ou da venda → 409 com mensagem de "tente de novo".
+- **Erros da IA corrigidos pelos testes:**
+  - no teste do 21º clube, a IA gerou siglas começando por "A" para nomes que começam por "C"; o código recusou
+    certo (400) e o dado do teste foi corrigido;
+  - o compilador e o lint pegaram o `LeagueModule` sem registro no `AppModule` e um tipo usado em decorador sem
+    `import type`;
+  - no teste do `summary`, a IA escreveu somas em ponto flutuante (`38.85 + 42`); viraram os valores literais.
+- **Ambiente:** o PostgreSQL instalado no sistema voltou a ocupar a porta 5432 (ele não foi desabilitado). Os testes
+  rodaram num container temporário na porta 5433. Para resolver de vez: `sudo systemctl disable --now postgresql`.
+- **Conferido:** 376 testes unitários e 243 e2e passando (eram 299 e 109); `lint`, `format:check` e `build` sem
+  erros; API compilada no ar com `curl` (`Location` do clube, compra, CSV com LF e erro do CSV em JSON) e os 19
+  endpoints do enunciado no Swagger.
+
+## Bloco 13 — Revisão do backend contra o barema (20/10)
+
+- **Pedido:** testes e2e cobrindo B01–B22 e uma revisão "com olhos de avaliador" do B2 e do B3, sem corrigir antes
+  de decidir.
+- **E2e por item do barema:** `clubs` (B09, B17), `market` (B10–B16, inclusive a sequência de compras do B13),
+  `transactions` (B18, B19) e `league` (B20–B22), além dos de jogadores (B01–B08). As recusas conferem o código, o
+  `message` em JSON e que nada foi gravado.
+- **Resultado da revisão:** nenhuma falha funcional confirmada; ordem 400 → 404 → 409, os 6 cálculos num lugar só,
+  as 5 operações em `$transaction`, camadas, validação e SQL parametrizado conferidos. Apontado e decidido:
+  - **corrigido:** variáveis em português nos testes novos (`goleiro`, `jovem`, `semTransacoes`…) e a função
+    `escalate` ("intensificar", em inglês) viraram nomes em inglês. O barema conta nomes fora do padrão também nos
+    testes. `meiaLua`, `aguias` e `delta` ficaram porque são nomes próprios dos exemplos;
+  - **corrigido:** o Swagger não mostrava corpos nem query params. O plugin do `@nestjs/swagger` no `nest-cli.json`
+    passou a ler os DTOs (`.dto.ts` e `.query.ts`);
+  - **corrigido:** a mensagem do 409 de caixa dizia "limite de 50% do caixa (100,00)", mostrando o caixa como se
+    fosse o limite. Agora diz "passa da metade do caixa do clube (100,00)";
+  - **corrigido:** o `TRUNCATE` dos testes usava `$executeRawUnsafe` com texto fixo; passou para `$executeRaw`, para
+    não levantar dúvida numa busca por "Unsafe";
+  - **anotado, sem mudança:** o índice `clubes_nome_lower_key` existe só na migration (o Prisma não descreve índice
+    em `lower()`). Se um dia eu gerar outra migration, preciso conferir que o SQL não traz `DROP INDEX` dele;
+  - **anotado, sem mudança:** um id com escape inválido na URL (`/players/%ZZ`) responde 400 pelo roteador do
+    Express, e não 404. Não é um formato do enunciado;
+  - **fica para os Blocos 20 e 21:** README da raiz e Docker Compose completo, que o B3, o B4 e o B5 exigem.
+- **Conferido:** 376 testes unitários e 243 e2e passando; `lint`, `format:check`, `build` e
+  `tsc --noUnusedLocals --noUnusedParameters` sem erros; os 19 endpoints no Swagger com corpos e query params.
