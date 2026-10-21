@@ -1,6 +1,6 @@
 import { Decimal, roundMoney } from './money';
+import { MS_PER_DAY } from './time';
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const PENALTY_BRACKETS = [
   { maxDays: 0, percentage: 0 },
   { maxDays: 30, percentage: 5 },

@@ -1,5 +1,9 @@
 import { Decimal } from './money';
-import { calculatePurchase, exceedsCashLimit } from './purchase';
+import {
+  calculatePurchase,
+  exceedsCashLimit,
+  isLoyaltyPeriodValid,
+} from './purchase';
 
 describe('calculatePurchase (RN13, tabela de exemplos)', () => {
   it.each([
@@ -30,5 +34,25 @@ describe('exceedsCashLimit (RN13, limite sem arredondar)', () => {
     expect(exceedsCashLimit(new Decimal(cost), new Decimal('261.15'))).toBe(
       exceeds,
     );
+  });
+});
+
+describe('isLoyaltyPeriodValid (limite de loyalty_until)', () => {
+  const now = new Date('2026-11-02T13:15:30.500Z');
+  const minute = 60 * 1000;
+  const day = 24 * 60 * minute;
+
+  it.each([
+    ['1 minuto depois', now.getTime() + minute, true],
+    ['exatamente 1.095 dias depois', now.getTime() + 1095 * day, true],
+    ['o próprio momento', now.getTime(), false],
+    ['no passado', now.getTime() - minute, false],
+    [
+      '1.095 dias e 1 minuto depois',
+      now.getTime() + 1095 * day + minute,
+      false,
+    ],
+  ])('%s → %s', (_, time, expected) => {
+    expect(isLoyaltyPeriodValid(new Date(time), now)).toBe(expected);
   });
 });

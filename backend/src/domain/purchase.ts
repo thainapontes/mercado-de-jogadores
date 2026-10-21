@@ -1,7 +1,9 @@
 import { Decimal, roundMoney } from './money';
+import { MS_PER_DAY } from './time';
 
 const FEE_THRESHOLD = new Decimal('30.00');
 const FEE_PERCENTAGE = 5;
+export const MAX_LOYALTY_DAYS = 1095;
 
 export interface Purchase {
   fee: Decimal;
@@ -31,4 +33,9 @@ export function calculatePurchase(
     totalCost,
     exceedsCashLimit: exceedsCashLimit(totalCost, cash),
   };
+}
+
+export function isLoyaltyPeriodValid(loyaltyUntil: Date, now: Date): boolean {
+  const period = loyaltyUntil.getTime() - now.getTime();
+  return period > 0 && period <= MAX_LOYALTY_DAYS * MS_PER_DAY;
 }
