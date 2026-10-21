@@ -7,7 +7,5 @@ export function testDatabaseUrl(databaseUrl: string): string {
 }
 
 export async function clearDatabase(prisma: PrismaClient): Promise<void> {
-  await prisma.$executeRawUnsafe(
-    'TRUNCATE duelos_partida, partidas, escalacoes, transacoes, contratos, jogadores, clubes RESTART IDENTITY CASCADE',
-  );
+  await prisma.$executeRaw`TRUNCATE duelos_partida, partidas, escalacoes, transacoes, contratos, jogadores, clubes RESTART IDENTITY CASCADE`;
 }
