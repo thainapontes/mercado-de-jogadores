@@ -1,6 +1,7 @@
 import { formatApiDateTime } from '../common/dates/api-date-time';
 import { Decimal } from '../domain/money';
 import { Sale } from '../domain/sale';
+import { TransactionSummary } from '../domain/transaction-summary';
 import { TransactionType } from '../domain/types';
 import { Contract, Transaction } from '../generated/prisma/client';
 
@@ -16,6 +17,17 @@ export interface TransactionResponse {
   profit: number | null;
   cash_change: number;
   created_at: string;
+}
+
+export interface TransactionHistoryResponse {
+  data: TransactionResponse[];
+  summary: {
+    total_spent: number;
+    total_received: number;
+    total_fees: number;
+    total_penalties: number;
+    total_profit: number;
+  };
 }
 
 export interface PurchaseResponse extends TransactionResponse {
@@ -82,5 +94,21 @@ export function toSaleResponse(
     penalty_rate: sale.penaltyRate,
     contract_status: sale.contractStatus,
     club_cash: clubCash.toNumber(),
+  };
+}
+
+export function toTransactionHistoryResponse(
+  transactions: Transaction[],
+  summary: TransactionSummary,
+): TransactionHistoryResponse {
+  return {
+    data: transactions.map(toTransactionResponse),
+    summary: {
+      total_spent: summary.totalSpent.toNumber(),
+      total_received: summary.totalReceived.toNumber(),
+      total_fees: summary.totalFees.toNumber(),
+      total_penalties: summary.totalPenalties.toNumber(),
+      total_profit: summary.totalProfit.toNumber(),
+    },
   };
 }
