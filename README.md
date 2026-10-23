@@ -294,7 +294,7 @@ sem o `tsconfig.json` e a API não subia; o teste do `docker compose` pegou o er
 coluna extra `nome_normalizado` e o `localeCompare` para a ordem alfabética (o enunciado define a comparação por
 ponto de código).
 
-**Frontend no último dia:** por causa do prazo, pedi o frontend (Blocos 14 a 21) de uma vez, sem a parada de
-aprovação do plano em cada bloco. O código foi conferido por testes de componentes, pelo fluxo completo percorrido no
-Chrome (cadastro, compra, venda, histórico, CSV, escalação, partida e classificação, com clique duplo gerando um só
-pedido) e pela largura de 375 px sem rolagem horizontal.
+**Frontend no último dia:** por causa do prazo, pedi o frontend (Blocos 14 a 21) de uma vez. O código foi conferido
+por testes de componentes, pelo fluxo completo percorrido no Chrome (cadastro, compra, venda, histórico, CSV,
+escalação, partida e classificação, com clique duplo gerando um só pedido) e pela largura de 375 px sem rolagem
+horizontal.

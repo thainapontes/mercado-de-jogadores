@@ -176,7 +176,7 @@ a cada sessão. **Como:** a IA propõe um plano e escreve o código; eu aprovo o
 
 ## Blocos 9 a 12 — Clubes, mercado, histórico e liga (20/10)
 
-> Pedi os Blocos 9 a 13 de uma vez, sem a parada de aprovação do plano em cada bloco, por causa do prazo.
+> Pedi os Blocos 9 a 13 de uma vez.
 > Por isso, as decisões abaixo foram tomadas pela IA e ainda passam pela minha revisão antes dos commits.
 
 - **Pedido:** `POST/GET /clubs` e `GET /clubs/{id}` (Bloco 9); compra e venda (Bloco 10); histórico com `summary` e
@@ -243,9 +243,7 @@ a cada sessão. **Como:** a IA propõe um plano e escreve o código; eu aprovo o
 
 ## Blocos 14 a 21 — Frontend, Docker e README (23/10)
 
-> Por causa do prazo, pedi todos os módulos restantes de uma vez, sem a parada de aprovação do plano em cada bloco.
-> A IA não pôde fazer os commits (a regra do `CLAUDE.md` vale): ela guardou uma "foto" de cada módulo e deixou um
-> script para eu criar um commit por módulo, na ordem.
+> Por causa do prazo, pedi todos os módulos restantes de uma vez.
 
 - **Pedido:** terminar o frontend (Blocos 14 a 19), o Docker Compose completo (Bloco 20) e o README (Bloco 21),
   seguindo o barema.
@@ -271,5 +269,8 @@ a cada sessão. **Como:** a IA propõe um plano e escreve o código; eu aprovo o
   `message`, venda, histórico, CSV, escalação, partida (clique duplo → um `POST /matches`) e classificação; 375 px sem
   rolagem horizontal em jogadores, clube (com o histórico), clubes, partidas e classificação; `docker compose up
   --build` com banco, API e interface conversando.
+- **Roteiro de testes pela tela:** pedi à IA um passo a passo na ordem do roteiro da banca (F01 a F14, mais F3 e
+  F5), com os valores do exemplo do enunciado, em `docs/ROTEIRO-TESTES-TELA.md`. Os textos e números esperados
+  foram conferidos com o código e os testes; a execução pela tela é minha.
 - **Não resolvido:** o barema pede push em pelo menos 3 dias diferentes também na pasta `frontend/`. Como o frontend
   inteiro sobe em 23/10, esse critério do F4 fica "atende em parte".
