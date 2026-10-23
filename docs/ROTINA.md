@@ -30,6 +30,8 @@ claude                    # abre o Claude Code; diga em que bloco paramos
   `npm run lint` e `npm run format:check`.
 - Tudo pelo Docker, sem npm (banco, API e interface): `docker compose up -d --build` na raiz. Usa as mesmas portas
   (5432, 3000 e 5173), então não rode junto com o `npm run start:dev` e o `npm run dev`.
+- Teste manual pela tela, na ordem do roteiro da banca: `docs/ROTEIRO-TESTES-TELA.md`. Ele começa com
+  `npx prisma migrate reset --force`, que **apaga todos os dados** do banco `passe`.
 
 ### Ao parar
 
