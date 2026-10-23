@@ -22,6 +22,16 @@ describe('lineupSchema', () => {
     ]);
   });
 
+  it('não trata as vagas vazias como jogador repetido', () => {
+    const result = lineupSchema.safeParse({
+      formation: '2-1-1',
+      player_ids: ['30', '', '', '', ''],
+    });
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual(
+      Array(4).fill('Escolha o titular desta vaga.'),
+    );
+  });
+
   it('não aceita o mesmo jogador em duas vagas', () => {
     const result = lineupSchema.safeParse({
       formation: '3-1',
