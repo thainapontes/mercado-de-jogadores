@@ -4,13 +4,15 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { DetailList } from '../components/ui/DetailList';
 import { Tabs } from '../components/ui/Tabs';
 import { SquadTab } from '../features/clubs/SquadTab';
+import { TransactionsTab } from '../features/clubs/TransactionsTab';
 import { useClub } from '../hooks/useClubs';
 import { formatMoney } from '../utils/format';
 
-type ClubTab = 'squad';
+type ClubTab = 'squad' | 'transactions';
 
 const TABS: { id: ClubTab; label: string }[] = [
   { id: 'squad', label: 'Elenco' },
+  { id: 'transactions', label: 'Histórico' },
 ];
 
 export function ClubPage() {
@@ -51,6 +53,9 @@ export function ClubPage() {
             isLoading={club.isPending}
             error={club.error}
           />
+        )}
+        {tab === 'transactions' && (
+          <TransactionsTab clubId={id} clubAcronym={club.data?.acronym} />
         )}
       </div>
     </>
