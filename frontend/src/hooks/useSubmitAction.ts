@@ -9,7 +9,7 @@ export function useSubmitAction<TVariables, TData>(
   const running = useRef(false);
 
   return useCallback(
-    async (variables: TVariables): Promise<TData | undefined> => {
+    async (variables: TVariables): Promise<{ data: TData } | undefined> => {
       if (running.current) {
         return undefined;
       }
@@ -17,7 +17,7 @@ export function useSubmitAction<TVariables, TData>(
       try {
         const data = await mutateAsync(variables);
         notifySuccess(successMessage);
-        return data;
+        return { data };
       } catch (error) {
         notifyError(
           error instanceof Error ? error.message : 'Erro inesperado.',
