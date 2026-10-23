@@ -5,14 +5,16 @@ import { DetailList } from '../components/ui/DetailList';
 import { Tabs } from '../components/ui/Tabs';
 import { SquadTab } from '../features/clubs/SquadTab';
 import { TransactionsTab } from '../features/clubs/TransactionsTab';
+import { LineupTab } from '../features/league/LineupTab';
 import { useClub } from '../hooks/useClubs';
 import { formatMoney } from '../utils/format';
 
-type ClubTab = 'squad' | 'transactions';
+type ClubTab = 'squad' | 'transactions' | 'lineup';
 
 const TABS: { id: ClubTab; label: string }[] = [
   { id: 'squad', label: 'Elenco' },
   { id: 'transactions', label: 'Histórico' },
+  { id: 'lineup', label: 'Escalação' },
 ];
 
 export function ClubPage() {
@@ -56,6 +58,9 @@ export function ClubPage() {
         )}
         {tab === 'transactions' && (
           <TransactionsTab clubId={id} clubAcronym={club.data?.acronym} />
+        )}
+        {tab === 'lineup' && (
+          <LineupTab clubId={id} squad={club.data?.players} />
         )}
       </div>
     </>

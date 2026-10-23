@@ -22,3 +22,12 @@ export const PLAYER_SORT_LABELS: Record<PlayerSort, string> = {
   age_desc: 'Idade (mais velho primeiro)',
   position: 'Posição (GOL → ATA)',
 };
+
+export const ATTRIBUTE_LABELS: Record<string, string> = {
+  pace: 'Velocidade',
+  shooting: 'Finalização',
+  passing: 'Passe',
+  dribbling: 'Drible',
+  defending: 'Defesa',
+  physical: 'Físico',
+};
