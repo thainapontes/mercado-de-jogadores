@@ -25,6 +25,12 @@ claude                    # abre o Claude Code; diga em que bloco paramos
   ar). O e2e usa um banco separado, `passe_test`, no mesmo container: ele é criado e recebe as migrations sozinho, e
   cada teste começa com as tabelas vazias. Os dados do banco `passe` nunca são apagados pelos testes.
 
+- Frontend (em outro terminal, na pasta `frontend/`): `npm run dev` → `http://localhost:5173`. A API precisa estar no
+  ar (`npm run start:dev` na pasta `backend/`). Testes do frontend: `npm test` (Vitest, termina sozinho);
+  `npm run lint` e `npm run format:check`.
+- Tudo pelo Docker, sem npm (banco, API e interface): `docker compose up -d --build` na raiz. Usa as mesmas portas
+  (5432, 3000 e 5173), então não rode junto com o `npm run start:dev` e o `npm run dev`.
+
 ### Ao parar
 
 ```bash

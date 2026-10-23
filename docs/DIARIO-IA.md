@@ -240,3 +240,36 @@ a cada sessão. **Como:** a IA propõe um plano e escreve o código; eu aprovo o
   - **fica para os Blocos 20 e 21:** README da raiz e Docker Compose completo, que o B3, o B4 e o B5 exigem.
 - **Conferido:** 376 testes unitários e 243 e2e passando; `lint`, `format:check`, `build` e
   `tsc --noUnusedLocals --noUnusedParameters` sem erros; os 19 endpoints no Swagger com corpos e query params.
+
+## Blocos 14 a 21 — Frontend, Docker e README (23/10)
+
+> Por causa do prazo, pedi todos os módulos restantes de uma vez, sem a parada de aprovação do plano em cada bloco.
+> A IA não pôde fazer os commits (a regra do `CLAUDE.md` vale): ela guardou uma "foto" de cada módulo e deixou um
+> script para eu criar um commit por módulo, na ordem.
+
+- **Pedido:** terminar o frontend (Blocos 14 a 19), o Docker Compose completo (Bloco 20) e o README (Bloco 21),
+  seguindo o barema.
+- **Feito pela IA (a revisar):**
+  - fundação: cliente HTTP único em `frontend/src/api/client.ts`, que lança o `message` da API; hooks do TanStack
+    Query; componentes compartilhados (`DataTable` com carregando, vazio e erro; `FormField`; `Modal`;
+    `ConfirmDialog`; `SubmitButton`; avisos de sucesso e erro); formatação de moeda e datas no horário de Brasília;
+  - proteção contra clique duplo em `hooks/useSubmitAction.ts`: além de desabilitar o botão, uma trava ignora o
+    segundo envio enquanto o primeiro não termina (o botão desabilitado sozinho pode demorar um instante a aparecer);
+  - telas: jogadores (filtros, paginação, cadastro, edição, condição, exclusão, compra), clubes, página do clube
+    (elenco com contratos e venda, histórico com totais e CSV, escalação por vagas), partidas e classificação;
+  - depois de cada ação, as consultas afetadas são invalidadas, e a tela recarrega os dados da API sem F5;
+  - `backend/Dockerfile` e `frontend/Dockerfile` em `node:22-alpine`; a interface roda com `vite preview`, sem nginx.
+- **Erros da IA corrigidos pelos testes:**
+  - nome vazio mostrava duas mensagens ("Informe o nome" e "de 3 a 100"); passou a parar na primeira;
+  - a regra "visitante diferente do mandante" aparecia antes de os clubes serem escolhidos;
+  - a confirmação de exclusão não sabia se tinha dado certo (o 204 não tem corpo): a ação passou a devolver
+    `{ data }` no sucesso;
+  - no Docker, a API não subia (`Cannot find module './internal/class.ts'`): o Prisma gera o cliente olhando o
+    `tsconfig.json`, que o Dockerfile copiava só depois do `npm ci`. O teste do `docker compose up` pegou o erro.
+- **Conferido:** 67 testes do frontend; `lint`, `format:check` e `build` sem erros; fluxo completo no Chrome
+  (headless) contra a API de verdade: cadastro (clique duplo → um jogador), compra, 409 de DOENTE → APTO com o
+  `message`, venda, histórico, CSV, escalação, partida (clique duplo → um `POST /matches`) e classificação; 375 px sem
+  rolagem horizontal em jogadores, clube (com o histórico), clubes, partidas e classificação; `docker compose up
+  --build` com banco, API e interface conversando.
+- **Não resolvido:** o barema pede push em pelo menos 3 dias diferentes também na pasta `frontend/`. Como o frontend
+  inteiro sobe em 23/10, esse critério do F4 fica "atende em parte".
