@@ -5,6 +5,7 @@ import { ClubsPage } from './pages/ClubsPage';
 import { MatchesPage } from './pages/MatchesPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PlayersPage } from './pages/PlayersPage';
+import { StandingsPage } from './pages/StandingsPage';
 
 export function App() {
   return (
@@ -15,6 +16,7 @@ export function App() {
         <Route path="clubs" element={<ClubsPage />} />
         <Route path="clubs/:id" element={<ClubPage />} />
         <Route path="matches" element={<MatchesPage />} />
+        <Route path="standings" element={<StandingsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
