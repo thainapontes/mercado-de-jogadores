@@ -26,7 +26,7 @@ Marque cada linha quando o resultado for o esperado.
 | 1.4 | Cadastre mais jogadores até passar de 10 (para escalar depois, faça para cada clube: 1 GOL, 2 ZAG ou LAT, 1 MEI, 1 ATA) | Tabela com 10 por página, "Página 1 de 2", total "N jogadores encontrados"; "Próxima" leva à página 2 |
 | 1.5 | Condição do Meia Lua → Mal condicionado → Salvar | Aviso de sucesso; valor de mercado passa a **37,00** |
 | 1.6 | Condição de um jogador → Doente → Salvar; depois Doente → Apto | Na segunda, aviso vermelho com o `message` da API (409) |
-| 1.7 | Editar um jogador livre: mude nome, agilidade e idade (para mais) → Salvar | Aviso de sucesso; a tabela mostra os novos dados e o overall novo; o valor base **não** muda |
+| 1.7 | Editar um jogador livre: mude nome, posição, agilidade e idade (para mais) → Salvar | Aviso de sucesso; a tabela mostra os novos dados e o overall recalculado pela nova posição (a agilidade não entra no overall); o valor base **não** muda |
 | 1.8 | Editar e diminuir a idade → Salvar | Aviso vermelho com o `message` da API (409) |
 | 1.9 | Buscar `lua` → Filtrar | Só o Meia Lua |
 | 1.10 | Combine filtros: posição, condição, idade mín./máx., valor mín./máx. → Filtrar | Só os jogadores que atendem a todos; volta para a página 1 |
