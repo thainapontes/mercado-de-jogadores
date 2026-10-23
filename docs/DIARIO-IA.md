@@ -274,3 +274,19 @@ a cada sessão. **Como:** a IA propõe um plano e escreve o código; eu aprovo o
   foram conferidos com o código e os testes; a execução pela tela é minha.
 - **Não resolvido:** o barema pede push em pelo menos 3 dias diferentes também na pasta `frontend/`. Como o frontend
   inteiro sobe em 23/10, esse critério do F4 fica "atende em parte".
+
+## Bloco 22 — Ensaio em máquina limpa (23/10)
+
+- **Pedido:** conferir o que faltava para a entrega e simular a banca: clonar o repositório e seguir o README ao pé
+  da letra.
+- **Feito pela IA (a revisar):** clone do repositório público numa pasta nova, sem `node_modules` nem `.env`, e com
+  um projeto do Docker Compose separado, para o banco começar vazio. Os comandos do README rodaram sem ajuste: banco,
+  migrations, API e interface no ar em cerca de 2,5 minutos. Depois, o fluxo completo pela API (cadastro, clubes,
+  compra, venda, histórico, CSV, escalação, partida e classificação), o CORS da interface, os comandos dos
+  diferenciais (376 testes unitários e 243 e2e no backend, 68 no frontend, `lint`, `format:check` e Swagger) e o
+  caminho alternativo `docker compose down -v` + `up -d --build`, que subiu em cerca de 1 minuto.
+- **Erro corrigido antes do ensaio:** na escalação, as vagas vazias contavam como "jogador repetido", e a tela
+  mostrava a mensagem errada. A checagem de repetidos passou a olhar só as vagas preenchidas, com um teste novo.
+- **Conferido por mim:** o roteiro de testes pela tela (`docs/ROTEIRO-TESTES-TELA.md`), sem falhas.
+- **Não alterado:** o README. Neste PC, as portas 5432 e 5173 estavam ocupadas por outros serviços e foi preciso
+  pará-los durante o ensaio; numa máquina limpa, as portas estão livres.
