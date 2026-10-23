@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { DataTable, type Column } from '../components/ui/DataTable';
 import { Pagination } from '../components/ui/Pagination';
+import { BuyPlayerDialog } from '../features/market/BuyPlayerDialog';
 import { ConditionDialog } from '../features/players/ConditionDialog';
 import { CreatePlayerDialog } from '../features/players/CreatePlayerDialog';
 import { EditPlayerDialog } from '../features/players/EditPlayerDialog';
@@ -16,7 +17,7 @@ import { useSubmitAction } from '../hooks/useSubmitAction';
 
 type Dialog =
   | { kind: 'create' }
-  | { kind: 'edit' | 'condition' | 'delete'; player: Player };
+  | { kind: 'edit' | 'condition' | 'delete' | 'buy'; player: Player };
 
 export function PlayersPage() {
   const [filters, setFilters] = useState<PlayerFilters>({});
@@ -73,6 +74,14 @@ export function PlayersPage() {
           {player.club_id === null && (
             <Button
               size="sm"
+              onClick={() => setDialog({ kind: 'buy', player })}
+            >
+              Comprar
+            </Button>
+          )}
+          {player.club_id === null && (
+            <Button
+              size="sm"
               variant="danger"
               onClick={() => setDialog({ kind: 'delete', player })}
             >
@@ -122,6 +131,9 @@ export function PlayersPage() {
       )}
       {dialog?.kind === 'condition' && (
         <ConditionDialog player={dialog.player} onClose={close} />
+      )}
+      {dialog?.kind === 'buy' && (
+        <BuyPlayerDialog player={dialog.player} onClose={close} />
       )}
       {dialog?.kind === 'delete' && (
         <ConfirmDialog
